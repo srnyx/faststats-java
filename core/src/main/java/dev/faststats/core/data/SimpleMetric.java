@@ -8,9 +8,9 @@ import java.util.concurrent.Callable;
 
 abstract class SimpleMetric<T> implements Metric<T> {
     private final @SourceId String id;
-    private final Callable<@Nullable T> callable;
+    private final Callable<? extends @Nullable T> callable;
 
-    public SimpleMetric(@SourceId final String id, final Callable<@Nullable T> callable) throws IllegalArgumentException {
+    public SimpleMetric(@SourceId final String id, final Callable<? extends @Nullable T> callable) throws IllegalArgumentException {
         if (!id.matches(SourceId.PATTERN)) {
             throw new IllegalArgumentException("Invalid source id '" + id + "', must match '" + SourceId.PATTERN + "'");
         }
@@ -28,7 +28,7 @@ abstract class SimpleMetric<T> implements Metric<T> {
     }
 
     @Override
-    public boolean equals(final Object o) {
+    public boolean equals(@Nullable final Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         final SimpleMetric<?> that = (SimpleMetric<?>) o;
         return Objects.equals(id, that.id);

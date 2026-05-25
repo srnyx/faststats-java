@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-final class MapMetric<T> extends SimpleMetric<Map<String, T>> {
-    public MapMetric(@SourceId final String id, final Callable<@Nullable Map<String, T>> callable) throws IllegalArgumentException {
+final class MapMetric<T> extends SimpleMetric<Map<String, ? extends T>> {
+    public MapMetric(@SourceId final String id, final Callable<? extends @Nullable Map<String, ? extends T>> callable) throws IllegalArgumentException {
         super(id, callable);
     }
 

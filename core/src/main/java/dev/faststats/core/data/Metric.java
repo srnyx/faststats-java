@@ -34,7 +34,7 @@ public interface Metric<T> {
      * @since 0.16.0
      */
     @Contract(pure = true)
-    Optional<T> compute() throws Exception;
+    Optional<? extends T> compute() throws Exception;
 
     /**
      * Get the metric data as a JSON element.
@@ -109,7 +109,7 @@ public interface Metric<T> {
      * @since 0.23.0
      */
     @Contract(value = "_, _ -> new", pure = true)
-    static Metric<Map<String, String>> stringMap(@SourceId final String id, final Callable<@Nullable Map<String, String>> callable) throws IllegalArgumentException {
+    static Metric<Map<String, ? extends String>> stringMap(@SourceId final String id, final Callable<? extends @Nullable Map<String, String>> callable) throws IllegalArgumentException {
         return new MapMetric<>(id, callable);
     }
 
@@ -125,7 +125,7 @@ public interface Metric<T> {
      * @since 0.23.0
      */
     @Contract(value = "_, _ -> new", pure = true)
-    static Metric<Map<String, Boolean>> booleanMap(@SourceId final String id, final Callable<@Nullable Map<String, Boolean>> callable) throws IllegalArgumentException {
+    static Metric<Map<String, ? extends Boolean>> booleanMap(@SourceId final String id, final Callable<? extends @Nullable Map<String, Boolean>> callable) throws IllegalArgumentException {
         return new MapMetric<>(id, callable);
     }
 
@@ -141,7 +141,7 @@ public interface Metric<T> {
      * @since 0.23.0
      */
     @Contract(value = "_, _ -> new", pure = true)
-    static Metric<Map<String, Number>> numberMap(@SourceId final String id, final Callable<@Nullable Map<String, Number>> callable) throws IllegalArgumentException {
+    static Metric<Map<String, ? extends Number>> numberMap(@SourceId final String id, final Callable<? extends @Nullable Map<String, ? extends Number>> callable) throws IllegalArgumentException {
         return new MapMetric<>(id, callable);
     }
 

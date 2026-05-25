@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 final class ArrayMetric<T> extends SimpleMetric<T[]> {
-    public ArrayMetric(@SourceId final String id, final Callable<T @Nullable []> callable) throws IllegalArgumentException {
+    public ArrayMetric(@SourceId final String id, final Callable<? extends T @Nullable []> callable) throws IllegalArgumentException {
         super(id, callable);
     }
 
