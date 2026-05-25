@@ -18,11 +18,9 @@ final class MapMetric<T> extends SimpleMetric<Map<String, ? extends T>> {
         return compute().map(data -> {
             final var object = new JsonObject();
             data.forEach((key, value) -> {
-                final var entry = new JsonObject();
-                if (value instanceof final Boolean bool) entry.addProperty(key, bool);
-                else if (value instanceof final Number number) entry.addProperty(key, number);
-                else entry.addProperty(key, value.toString());
-                object.add(key, entry);
+                if (value instanceof final Boolean bool) object.addProperty(key, bool);
+                else if (value instanceof final Number number) object.addProperty(key, number);
+                else object.addProperty(key, value.toString());
             });
             return object;
         });
