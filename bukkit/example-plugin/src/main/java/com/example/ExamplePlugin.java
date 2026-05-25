@@ -11,14 +11,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ExamplePlugin extends JavaPlugin {
     private final AtomicInteger gameCount = new AtomicInteger();
     private final BukkitContext context = new BukkitContext(this, "YOUR_TOKEN_HERE");
+    public final ErrorTracker errorTracker = context.awareErrorTracker();
 
     private final BukkitMetrics metrics = context.metricsFactory()
             // Custom metrics require a corresponding data source in your project settings
             .addMetric(Metric.number("game_count", gameCount::get))
             .addMetric(Metric.string("server_version", () -> "1.0.0"))
-
-            // Error tracking must be enabled in the project settings
-            .errorTracker(ErrorTracker.contextAware())
 
             // #onFlush is invoked after successful metrics submission
             // This is useful for cleaning up cached data

@@ -1,6 +1,5 @@
 package dev.faststats.minestom;
 
-import dev.faststats.ErrorTracker;
 import dev.faststats.Metrics;
 import dev.faststats.data.Metric;
 import net.minestom.server.Auth;
@@ -27,9 +26,6 @@ public sealed interface MinestomMetrics extends Metrics permits MinestomMetricsI
 
         @Override
         Factory onFlush(Runnable flush);
-
-        @Override
-        Factory errorTracker(ErrorTracker tracker);
 
         @Override
         MinestomMetrics create() throws IllegalStateException;

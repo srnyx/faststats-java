@@ -4,23 +4,12 @@ import dev.faststats.data.Metric;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Contract;
 
-import java.util.Optional;
-
 /**
  * Metrics interface.
  *
  * @since 0.24.0
  */
 public interface Metrics {
-    /**
-     * Get the error tracker for this metrics instance.
-     *
-     * @return the error tracker
-     * @since 0.23.0
-     */
-    @Contract(pure = true)
-    Optional<ErrorTracker> getErrorTracker();
-
     /**
      * Performs additional post-startup tasks.
      * <p>
@@ -74,18 +63,6 @@ public interface Metrics {
          */
         @Contract(mutates = "this")
         Factory onFlush(Runnable flush);
-
-        /**
-         * Sets the error tracker for this metrics instance.
-         * <p>
-         * If {@link Config#errorTracking()} is disabled, no errors will be submitted.
-         *
-         * @param tracker the error tracker
-         * @return the metrics factory
-         * @since 0.23.0
-         */
-        @Contract(mutates = "this")
-        Factory errorTracker(ErrorTracker tracker);
 
         /**
          * Creates a new metrics instance.

@@ -8,13 +8,13 @@ import dev.faststats.FeatureFlagService;
 import java.time.Duration;
 
 public final class FeatureFlagExample {
-    public static final FeatureFlagService SERVICE = getContext().featureFlags(
-            Attributes.create() // Define global attributes
+    public static final FeatureFlagService SERVICE = getContext().featureFlagServiceFactory()
+            .attributes(Attributes.create() // Define global attributes
                     .put("version", "1.2.3")
                     .put("java_version", System.getProperty("java.version"))
-                    .put("java_vendor", System.getProperty("java.vendor")),
-            Duration.ofMinutes(10) // Custom cache TTL for resolved flag values
-    );
+                    .put("java_vendor", System.getProperty("java.vendor")))
+            .ttl(Duration.ofMinutes(10)) // Custom cache TTL for resolved flag values
+            .create();
 
     // Define flags with default values
     public static final FeatureFlag<Boolean> NEW_COMMANDS = SERVICE.define("new_commands", false);

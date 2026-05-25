@@ -1,5 +1,6 @@
 package dev.faststats;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.faststats.data.Metric;
 import dev.faststats.internal.Logger;
@@ -22,7 +23,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,12 +42,11 @@ public abstract class SimpleMetrics implements Metrics {
             .build();
     private @Nullable ScheduledExecutorService executor = null;
 
-    private final @Nullable ErrorTracker tracker;
     private final @Nullable Runnable flush;
     private final Set<Metric<?>> metrics;
     private final URI url;
 
-    protected final FastStatsContext context;
+    protected final SimpleContext context;
 
     @Contract(mutates = "io")
     protected SimpleMetrics(final Factory factory) throws IllegalStateException {
@@ -74,7 +73,6 @@ public abstract class SimpleMetrics implements Metrics {
         this.metrics = context.getConfig().additionalMetrics() ? Set.copyOf(factory.metrics) : Set.of();
         final var debug = context.getConfig().debug() || Boolean.getBoolean("faststats.debug");
         this.logger.setFilter(level -> debug || level.equals(Level.CONFIG));
-        this.tracker = context.getConfig().errorTracking() ? factory.tracker : null;
         this.flush = factory.flush;
         this.url = url;
     }
@@ -168,7 +166,7 @@ public abstract class SimpleMetrics implements Metrics {
 
                 if (statusCode >= 200 && statusCode < 300) {
                     logger.info("Metrics submitted with status code: %s (%s)", statusCode, body);
-                    getErrorTracker().map(SimpleErrorTracker.class::cast).ifPresent(SimpleErrorTracker::clear);
+                    context.errorTrackers().stream().map(SimpleErrorTracker.class::cast).forEach(SimpleErrorTracker::clear);
                     if (flush != null) flush.run();
                     return true;
                 } else if (statusCode >= 300 && statusCode < 400) {
@@ -213,7 +211,7 @@ public abstract class SimpleMetrics implements Metrics {
             appendDefaultData(metrics);
         } catch (final Throwable t) {
             logger.error("Failed to append default data", t);
-            getErrorTracker().ifPresent(tracker -> tracker.trackError(t));
+            // getErrorTracker().ifPresent(tracker -> tracker.trackError(t)); // todo: fixme – report directly to faststats?
         }
 
         this.metrics.forEach(metric -> {
@@ -221,23 +219,25 @@ public abstract class SimpleMetrics implements Metrics {
                 metric.getData().ifPresent(element -> metrics.add(metric.getId(), element));
             } catch (final Throwable t) {
                 logger.error("Failed to build metric data: %s", t, metric.getId());
-                getErrorTracker().ifPresent(tracker -> tracker.trackError(t));
+                // getErrorTracker().ifPresent(tracker -> tracker.trackError(t)); // todo: fixme – report directly to faststats?
             }
         });
 
         data.addProperty("identifier", context.getConfig().serverId().toString());
         data.add("data", metrics);
 
-        getErrorTracker().map(SimpleErrorTracker.class::cast)
+        // todo: remove with dedicated error tracking route
+        if (context.getConfig().errorTracking()) context.errorTrackers().stream()
+                .map(SimpleErrorTracker.class::cast)
                 .map(SimpleErrorTracker::getData)
                 .filter(errors -> !errors.isEmpty())
-                .ifPresent(errors -> data.add("errors", errors));
+                .reduce((first, second) -> {
+                    final var errors = new JsonArray(first.size() + second.size());
+                    errors.addAll(first);
+                    errors.addAll(second);
+                    return first;
+                }).ifPresent(errors -> data.add("errors", errors));
         return data;
-    }
-
-    @Override
-    public Optional<ErrorTracker> getErrorTracker() {
-        return Optional.ofNullable(tracker);
     }
 
     @Contract(mutates = "param1")
@@ -245,7 +245,7 @@ public abstract class SimpleMetrics implements Metrics {
 
     @Override
     public void shutdown() {
-        getErrorTracker().ifPresent(ErrorTracker::detachErrorContext);
+        context.errorTrackers().forEach(ErrorTracker::detachErrorContext);
         if (executor != null) try {
             logger.info("Shutting down metrics submission");
             executor.shutdown();
@@ -259,11 +259,10 @@ public abstract class SimpleMetrics implements Metrics {
 
     public abstract static class Factory implements Metrics.Factory {
         private final Set<Metric<?>> metrics = new HashSet<>(0);
-        protected final FastStatsContext context;
-        private @Nullable ErrorTracker tracker;
+        protected final SimpleContext context;
         private @Nullable Runnable flush;
 
-        protected Factory(final FastStatsContext context) {
+        protected Factory(final SimpleContext context) {
             this.context = context;
         }
 
@@ -276,12 +275,6 @@ public abstract class SimpleMetrics implements Metrics {
         @Override
         public Factory onFlush(final Runnable flush) {
             this.flush = flush;
-            return this;
-        }
-
-        @Override
-        public Factory errorTracker(final ErrorTracker tracker) {
-            this.tracker = tracker;
             return this;
         }
     }

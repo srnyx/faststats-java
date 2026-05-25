@@ -14,10 +14,6 @@ public class ExampleMod implements ModInitializer {
     private final Metrics metrics = context.metricsFactory()
             // Custom metrics require a corresponding data source in your project settings
             .addMetric(Metric.number("example_metric", () -> 42))
-
-            // Error tracking must be enabled in the project settings
-            .errorTracker(ErrorTracker.contextAware())
-
             .create();
 
     @Override

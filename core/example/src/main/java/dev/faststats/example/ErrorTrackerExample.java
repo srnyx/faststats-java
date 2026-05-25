@@ -1,18 +1,19 @@
 package dev.faststats.example;
 
 import dev.faststats.ErrorTracker;
+import dev.faststats.FastStatsContext;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.AccessDeniedException;
 
 public final class ErrorTrackerExample {
     // Context-aware: automatically tracks uncaught errors from the same class loader
-    public static final ErrorTracker CONTEXT_AWARE = ErrorTracker.contextAware()
+    public static final ErrorTracker CONTEXT_AWARE = getContext().awareErrorTracker()
             .ignoreError(InvocationTargetException.class, "Expected .* but got .*")
             .ignoreError(AccessDeniedException.class);
 
     // Context-unaware: only tracks errors passed to trackError() manually
-    public static final ErrorTracker CONTEXT_UNAWARE = ErrorTracker.contextUnaware()
+    public static final ErrorTracker CONTEXT_UNAWARE = getContext().unawareErrorTracker()
             .anonymize("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$", "[email hidden]")
             .anonymize("Bearer [A-Za-z0-9._~+/=-]+", "Bearer [token hidden]")
             .anonymize("AKIA[0-9A-Z]{16}", "[aws-key hidden]")
@@ -25,5 +26,9 @@ public final class ErrorTrackerExample {
         } catch (final Exception e) {
             CONTEXT_UNAWARE.trackError(e);
         }
+    }
+
+    private static FastStatsContext getContext() {
+        return null;
     }
 }

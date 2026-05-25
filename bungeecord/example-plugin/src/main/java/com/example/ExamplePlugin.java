@@ -17,9 +17,6 @@ public class ExamplePlugin extends Plugin {
             .addMetric(Metric.number("game_count", gameCount::get))
             .addMetric(Metric.string("server_version", () -> "1.0.0"))
 
-            // Error tracking must be enabled in the project settings
-            .errorTracker(ErrorTracker.contextAware())
-
             // #onFlush is invoked after successful metrics submission
             // This is useful for cleaning up cached data
             .onFlush(() -> gameCount.set(0)) // reset game count on flush

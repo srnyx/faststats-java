@@ -14,13 +14,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class SimpleErrorTracker implements ErrorTracker {
-    private final Map<String, Report> reports = new ConcurrentHashMap<>();
+    private final Map<JsonObject, Integer> reports = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends Throwable>, Set<Pattern>> ignoredTypedPatterns = new ConcurrentHashMap<>();
     private final Set<Class<? extends Throwable>> ignoredTypes = new CopyOnWriteArraySet<>();
@@ -63,11 +62,8 @@ final class SimpleErrorTracker implements ErrorTracker {
         try {
             if (isIgnored(error, Collections.newSetFromMap(new IdentityHashMap<>()))) return;
             final var compiled = ErrorHelper.compile(error, null, handled, anonymizationEntries);
-            final var identity = error.getClass().getName() + "@" + error.hashCode() + ":" + (handled ? 1 : 0);
-            reports.compute(identity, (s, report) -> {
-                if (report == null) return new Report(compiled);
-                report.counter.incrementAndGet();
-                return report;
+            reports.compute(compiled, (key, report) -> {
+                return report != null ? report + 1 : 1;
             });
         } catch (final NoClassDefFoundError ignored) {
         }
@@ -114,18 +110,13 @@ final class SimpleErrorTracker implements ErrorTracker {
 
     public JsonArray getData() {
         final var report = new JsonArray(reports.size());
-
-        reports.forEach((hash, object) -> {
-            report.add(fillEntry(object.json, object.counter.get()));
+        reports.forEach((entry, count) -> {
+            final var copy = entry.deepCopy();
+            context.getSdkInfo().getBuildId().ifPresent(id -> copy.addProperty("buildId", id));
+            if (count > 1) copy.addProperty("count", count);
+            report.add(copy);
         });
-
         return report;
-    }
-
-    private JsonObject fillEntry(final JsonObject entry, final int count) {
-        context.getSdkInfo().getBuildId().ifPresent(id -> entry.addProperty("buildId", id));
-        if (count > 1) entry.addProperty("count", count);
-        return entry;
     }
 
     public void clear() {
@@ -170,14 +161,5 @@ final class SimpleErrorTracker implements ErrorTracker {
     @Override
     public synchronized Optional<BiConsumer<@Nullable ClassLoader, Throwable>> getContextErrorHandler() {
         return Optional.ofNullable(errorEvent);
-    }
-
-    private static class Report {
-        private final JsonObject json;
-        private final AtomicInteger counter = new AtomicInteger(1);
-
-        private Report(final JsonObject json) {
-            this.json = json;
-        }
     }
 }

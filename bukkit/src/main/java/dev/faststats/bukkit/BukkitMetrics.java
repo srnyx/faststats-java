@@ -1,6 +1,5 @@
 package dev.faststats.bukkit;
 
-import dev.faststats.ErrorTracker;
 import dev.faststats.Metrics;
 import dev.faststats.data.Metric;
 import org.bukkit.plugin.IllegalPluginAccessException;
@@ -28,9 +27,6 @@ public sealed interface BukkitMetrics extends Metrics permits BukkitMetricsImpl 
 
         @Override
         Factory onFlush(Runnable flush);
-
-        @Override
-        Factory errorTracker(ErrorTracker tracker);
 
         @Override
         BukkitMetrics create() throws IllegalStateException;

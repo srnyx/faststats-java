@@ -1,7 +1,6 @@
 package com.example;
 
 import com.google.inject.Inject;
-import dev.faststats.ErrorTracker;
 import dev.faststats.Metrics;
 import dev.faststats.data.Metric;
 import dev.faststats.sponge.SpongeContext;
@@ -24,10 +23,6 @@ public class ExamplePlugin {
         this.metrics = context.metricsFactory()
                 // Custom metrics require a corresponding data source in your project settings
                 .addMetric(Metric.number("example_metric", () -> 42))
-
-                // Error tracking must be enabled in the project settings
-                .errorTracker(ErrorTracker.contextAware())
-
                 .create();
     }
 

@@ -1,7 +1,6 @@
 package dev.faststats.bukkit;
 
 import com.google.gson.JsonObject;
-import dev.faststats.ErrorTracker;
 import dev.faststats.SimpleMetrics;
 import dev.faststats.config.SimpleConfig;
 import dev.faststats.data.Metric;
@@ -82,15 +81,16 @@ final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
             return plugin.getServer().getOnlinePlayers().size();
         } catch (final Throwable t) {
             logger.error("Failed to get player count", t);
+            // todo: track error?
             return 0;
         }
     }
 
     @Override
     public void ready() {
-        if (getErrorTracker().isPresent()) try {
+        try {
             Class.forName("com.destroystokyo.paper.event.server.ServerExceptionEvent");
-            plugin.getServer().getPluginManager().registerEvents(new PaperEventListener(this), plugin);
+            plugin.getServer().getPluginManager().registerEvents(new PaperEventListener(plugin, context), plugin);
         } catch (final ClassNotFoundException ignored) {
         }
     }
@@ -116,11 +116,6 @@ final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
         @Override
         public Factory onFlush(final Runnable flush) {
             return (Factory) super.onFlush(flush);
-        }
-
-        @Override
-        public Factory errorTracker(final ErrorTracker tracker) {
-            return (Factory) super.errorTracker(tracker);
         }
 
         @Override

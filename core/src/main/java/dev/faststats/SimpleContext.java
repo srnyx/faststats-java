@@ -41,7 +41,7 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
     }
 
     private SdkInfo constructSdkInfo(final String name) throws UncheckedIOException, IllegalStateException, IllegalArgumentException {
-        try (final var stream = SimpleMetrics.class.getClassLoader().getResourceAsStream("/META-INF/faststats.properties")) {
+        try (final var stream = getClass().getResourceAsStream("/META-INF/faststats.properties")) {
             if (stream == null) throw new IllegalStateException("Resource '/META-INF/faststats.properties' not found");
 
             final var properties = new Properties();
@@ -115,5 +115,9 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
     @Contract(pure = true)
     public SdkInfo getSdkInfo() {
         return sdkInfo;
+    }
+    
+    public Set<ErrorTracker> errorTrackers() {
+        return errorTrackers;
     }
 }

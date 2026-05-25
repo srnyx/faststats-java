@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -13,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ErrorTrackerTest {
+    private final MockContext context = new MockContext(UUID.randomUUID(), true);
+    
     @Test
     public void sameClassLoader() {
         final var loader = getClass().getClassLoader();
@@ -126,7 +129,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void redactsBuiltInSensitiveValuesFromMessageAndStackHeader() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
 
         tracker.trackError("connect jdbc:postgresql://localhost:5432/secret@db from 192.168.1.20");
 
@@ -140,7 +143,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void appliesCustomRedactionAfterBuiltInRedaction() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         tracker.anonymize("session=[^ ]+", "session=[hidden]");
 
         tracker.trackError("failed with session=abc123 from 10.0.0.1");
@@ -156,7 +159,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void nullMessagesAreNotSerializedAsMessageProperty() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
 
         tracker.trackError(new RuntimeException((String) null));
 
@@ -167,7 +170,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void nestedCausesAreSerializedInOrder() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         final var root = new IllegalArgumentException("root secret 172.16.0.9");
         root.setStackTrace(new StackTraceElement[]{
                 new StackTraceElement("example.Root", "fail", "Root.java", 10)
@@ -202,7 +205,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void cyclicCauseChainStopsAfterFirstVisit() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         final var first = new RuntimeException("first");
         final var second = new IllegalStateException("second", first);
         first.initCause(second);
@@ -224,7 +227,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void duplicateErrorsAreAggregatedWithCount() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         final var first = createStableError();
         final var second = createStableError();
 
@@ -241,7 +244,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void clearKeepsDuplicateCountButRemovesPayloadUntilRepeated() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         tracker.trackError(createStableError());
         tracker.trackError(createStableError());
 
@@ -258,7 +261,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void ignoredNestedCauseSuppressesWholeReport() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         tracker.ignoreError(IllegalArgumentException.class, "ignore me");
 
         tracker.trackError(new RuntimeException("wrapper", new IllegalArgumentException("ignore me")));
@@ -268,7 +271,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void repeatingStackFramesAreCollapsed() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         final var error = new StackOverflowError("recursive");
         error.setStackTrace(new StackTraceElement[]{
                 new StackTraceElement("example.Recursive", "a", "Recursive.java", 1),
@@ -291,7 +294,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void longMessagesAreTruncatedBeforeSerialization() {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         final var message = "a".repeat(600);
 
         tracker.trackError(message);
@@ -305,7 +308,7 @@ public class ErrorTrackerTest {
 
     @Test
     public void attachedContextTracksUnhandledThreadError() throws InterruptedException {
-        final var tracker = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+        final var tracker = (SimpleErrorTracker) context.unawareErrorTracker();
         final var handled = new CountDownLatch(1);
         final var thrown = new RuntimeException("async failure");
         thrown.setStackTrace(new StackTraceElement[]{

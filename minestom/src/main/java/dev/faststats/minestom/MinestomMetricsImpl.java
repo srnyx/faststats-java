@@ -34,7 +34,7 @@ final class MinestomMetricsImpl extends SimpleMetrics implements MinestomMetrics
 
     @Override
     public void ready() {
-        getErrorTracker().ifPresent(this::registerExceptionHandler);
+        context.errorTrackers().forEach(this::registerExceptionHandler);
     }
 
     private void registerExceptionHandler(final ErrorTracker errorTracker) {
@@ -59,11 +59,6 @@ final class MinestomMetricsImpl extends SimpleMetrics implements MinestomMetrics
         @Override
         public Factory onFlush(final Runnable flush) {
             return (Factory) super.onFlush(flush);
-        }
-
-        @Override
-        public Factory errorTracker(final ErrorTracker tracker) {
-            return (Factory) super.errorTracker(tracker);
         }
 
         @Override
