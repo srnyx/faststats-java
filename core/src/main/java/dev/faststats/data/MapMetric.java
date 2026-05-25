@@ -1,4 +1,4 @@
-package dev.faststats.core.data;
+package dev.faststats.data;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
