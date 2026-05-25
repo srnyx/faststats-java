@@ -15,44 +15,6 @@ import java.util.regex.Pattern;
  */
 public sealed interface ErrorTracker permits SimpleErrorTracker {
     /**
-     * Create and attach a new context-aware error tracker.
-     * <p>
-     * This tracker will automatically track errors that occur in the same class loader as the tracker itself.
-     * <p>
-     * You can still manually track errors using {@code #trackError}.
-     *
-     * @return the error tracker
-     * @see #contextUnaware()
-     * @see #trackError(String, boolean)
-     * @see #trackError(Throwable, boolean)
-     * @since 0.23.0
-     */
-    @Contract(value = " -> new")
-    static ErrorTracker contextAware() {
-        final var tracker = new SimpleErrorTracker();
-        tracker.attachErrorContext(ErrorTracker.class.getClassLoader());
-        return tracker;
-    }
-
-    /**
-     * Create a new context-unaware error tracker.
-     * <p>
-     * This tracker will not automatically track any errors.
-     * <p>
-     * You have to manually track errors using {@code #trackError}.
-     *
-     * @return the error tracker
-     * @see #contextAware()
-     * @see #trackError(String)
-     * @see #trackError(Throwable)
-     * @since 0.23.0
-     */
-    @Contract(value = " -> new", pure = true)
-    static ErrorTracker contextUnaware() {
-        return new SimpleErrorTracker();
-    }
-
-    /**
      * Tracks a handled  error.
      *
      * @param message the error message

@@ -2,7 +2,6 @@ package dev.faststats;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import dev.faststats.internal.Constants;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.Thread.UncaughtExceptionHandler;
@@ -15,13 +14,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class SimpleErrorTracker implements ErrorTracker {
-    private final Map<String, Integer> collected = new ConcurrentHashMap<>();
-    private final Map<String, JsonObject> reports = new ConcurrentHashMap<>();
+    private final Map<String, Report> reports = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends Throwable>, Set<Pattern>> ignoredTypedPatterns = new ConcurrentHashMap<>();
     private final Set<Class<? extends Throwable>> ignoredTypes = new CopyOnWriteArraySet<>();
@@ -37,7 +36,10 @@ final class SimpleErrorTracker implements ErrorTracker {
     private volatile @Nullable BiConsumer<@Nullable ClassLoader, Throwable> errorEvent = null;
     private volatile @Nullable UncaughtExceptionHandler originalHandler = null;
 
-    public SimpleErrorTracker() {
+    private final FastStatsContext context;
+
+    public SimpleErrorTracker(final FastStatsContext context) {
+        this.context = context;
         ErrorHelper.usernamePattern().ifPresent(pattern -> anonymizationEntries.add(Map.entry(pattern, "[username hidden]")));
     }
 
@@ -61,11 +63,12 @@ final class SimpleErrorTracker implements ErrorTracker {
         try {
             if (isIgnored(error, Collections.newSetFromMap(new IdentityHashMap<>()))) return;
             final var compiled = ErrorHelper.compile(error, null, handled, anonymizationEntries);
-            final var hashed = MurmurHash3.hash(compiled.toString());
-            if (collected.compute(hashed, (k, v) -> {
-                return v == null ? 1 : v + 1;
-            }) > 1) return;
-            reports.put(hashed, compiled);
+            final var identity = error.getClass().getName() + "@" + error.hashCode() + ":" + (handled ? 1 : 0);
+            reports.compute(identity, (s, report) -> {
+                if (report == null) return new Report(compiled);
+                report.counter.incrementAndGet();
+                return report;
+            });
         } catch (final NoClassDefFoundError ignored) {
         }
     }
@@ -113,27 +116,19 @@ final class SimpleErrorTracker implements ErrorTracker {
         final var report = new JsonArray(reports.size());
 
         reports.forEach((hash, object) -> {
-            final var count = collected.getOrDefault(hash, 1);
-            report.add(fillEntry(object.deepCopy(), hash, count));
-        });
-
-        collected.forEach((hash, count) -> {
-            if (count <= 0 || reports.containsKey(hash)) return;
-            report.add(fillEntry(new JsonObject(), hash, count));
+            report.add(fillEntry(object.json, object.counter.get()));
         });
 
         return report;
     }
 
-    private JsonObject fillEntry(final JsonObject entry, final String hash, final int count) {
-        entry.addProperty("group_hash", hash);
-        entry.addProperty("buildId", Constants.BUILD_ID);
+    private JsonObject fillEntry(final JsonObject entry, final int count) {
+        context.getSdkInfo().getBuildId().ifPresent(id -> entry.addProperty("buildId", id));
         if (count > 1) entry.addProperty("count", count);
         return entry;
     }
 
     public void clear() {
-        collected.replaceAll((k, v) -> 0);
         reports.clear();
     }
 
@@ -175,5 +170,14 @@ final class SimpleErrorTracker implements ErrorTracker {
     @Override
     public synchronized Optional<BiConsumer<@Nullable ClassLoader, Throwable>> getContextErrorHandler() {
         return Optional.ofNullable(errorEvent);
+    }
+
+    private static class Report {
+        private final JsonObject json;
+        private final AtomicInteger counter = new AtomicInteger(1);
+
+        private Report(final JsonObject json) {
+            this.json = json;
+        }
     }
 }

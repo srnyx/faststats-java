@@ -19,7 +19,7 @@ public final class NukkitContext extends SimpleContext {
     final PluginBase plugin;
 
     public NukkitContext(final PluginBase plugin, @Token final String token) {
-        super(SimpleConfig.read(Path.of(plugin.getServer().getPluginPath(), "faststats", "config.properties")), token);
+        super(SimpleConfig.read(Path.of(plugin.getServer().getPluginPath(), "faststats", "config.properties")), "nukkit", token);
         this.plugin = plugin;
     }
 

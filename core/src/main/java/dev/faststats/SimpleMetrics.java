@@ -2,7 +2,6 @@ package dev.faststats;
 
 import com.google.gson.JsonObject;
 import dev.faststats.data.Metric;
-import dev.faststats.internal.Constants;
 import dev.faststats.internal.Logger;
 import dev.faststats.internal.LoggerFactory;
 import org.jetbrains.annotations.ApiStatus;
@@ -150,12 +149,13 @@ public abstract class SimpleMetrics implements Metrics {
             final var compressed = byteOutput.toByteArray();
             logger.info("Compressed size: %s bytes", compressed.length);
 
+            final var sdk = context.getSdkInfo();
             final var request = HttpRequest.newBuilder()
                     .POST(HttpRequest.BodyPublishers.ofByteArray(compressed))
                     .header("Content-Encoding", "gzip")
                     .header("Content-Type", "application/octet-stream")
                     .header("Authorization", "Bearer " + context.getToken())
-                    .header("User-Agent", "FastStats Metrics " + Constants.SDK_NAME + "/" + Constants.SDK_VERSION)
+                    .header("User-Agent", "FastStats Metrics " + sdk.getName() + "/" + sdk.getVersion())
                     .timeout(Duration.ofSeconds(3))
                     .uri(url)
                     .build();

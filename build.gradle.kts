@@ -53,7 +53,7 @@ subprojects {
         doLast {
             val file = outputDir.get().file("META-INF/faststats.properties").asFile
             file.parentFile.mkdirs()
-            file.writeText("name=${project.name}\nversion=${project.version}\n")
+            file.writeText("version=${project.version}\n")
         }
     }
 

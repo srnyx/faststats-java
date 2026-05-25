@@ -7,7 +7,7 @@ import java.util.UUID;
 @NullMarked
 public final class MockContext extends SimpleContext {
     public MockContext(final UUID serverId, @Token final String token, final boolean debug) throws IllegalArgumentException {
-        super(new MockConfig(serverId, debug), token);
+        super(new MockConfig(serverId, debug), "core:test", token);
     }
 
     @Override

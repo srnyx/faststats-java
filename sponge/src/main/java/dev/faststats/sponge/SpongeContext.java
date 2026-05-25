@@ -24,7 +24,7 @@ public final class SpongeContext extends SimpleContext {
             @ConfigDir(sharedRoot = true) final Path dataDirectory,
             @Token final String token
     ) {
-        super(SpongeConfig.read(plugin, dataDirectory.resolve("faststats").resolve("config.properties")), token);
+        super(SpongeConfig.read(plugin, dataDirectory.resolve("faststats").resolve("config.properties")), "sponge", token);
         this.plugin = plugin;
     }
 

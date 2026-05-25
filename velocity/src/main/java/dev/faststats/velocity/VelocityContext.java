@@ -28,7 +28,7 @@ public final class VelocityContext extends SimpleContext {
             @DataDirectory final Path dataDirectory,
             @Token final String token
     ) {
-        super(SimpleConfig.read(dataDirectory.resolveSibling("faststats").resolve("config.properties")), token);
+        super(SimpleConfig.read(dataDirectory.resolveSibling("faststats").resolve("config.properties")), "velocity", token);
         this.plugin = plugin;
         this.server = server;
     }

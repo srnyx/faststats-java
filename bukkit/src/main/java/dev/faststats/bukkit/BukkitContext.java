@@ -17,7 +17,7 @@ public final class BukkitContext extends SimpleContext {
     final Plugin plugin;
 
     public BukkitContext(final Plugin plugin, @Token final String token) {
-        super(SimpleConfig.read(getConfigPath(plugin)), token);
+        super(SimpleConfig.read(getConfigPath(plugin)), "bukkit", token);
         this.plugin = plugin;
     }
 

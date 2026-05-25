@@ -12,7 +12,7 @@ import java.time.Duration;
  *
  * @since 0.23.0
  */
-public interface FastStatsContext {
+public sealed interface FastStatsContext permits SimpleContext {
     /**
      * Get the metrics configuration shared by services created from this context.
      *
@@ -82,4 +82,41 @@ public interface FastStatsContext {
      */
     @Contract(value = "_, _ -> new", pure = true)
     FeatureFlagService featureFlags(final Attributes attributes, final Duration ttl);
+
+    /**
+     * Create and attach a new context-aware error tracker.
+     * <p>
+     * This tracker will automatically track errors that occur in the same class loader as the tracker itself.
+     * <p>
+     * You can still manually track errors using {@code #trackError}.
+     *
+     * @return the error tracker
+     * @see #unawareErrorTracker()
+     * @see ErrorTracker#attachErrorContext(ClassLoader)
+     * @see ErrorTracker#trackError(String, boolean)
+     * @see ErrorTracker#trackError(Throwable, boolean)
+     * @since 0.23.0
+     */
+    @Contract(value = " -> new")
+    ErrorTracker awareErrorTracker();
+
+    /**
+     * Create a new context-unaware error tracker.
+     * <p>
+     * This tracker will not automatically track any errors.
+     * <p>
+     * You have to manually track errors using {@code #trackError}.
+     *
+     * @return the error tracker
+     * @see #awareErrorTracker()
+     * @see ErrorTracker#trackError(String)
+     * @see ErrorTracker#trackError(Throwable)
+     * @since 0.23.0
+     */
+    @Contract(value = " -> new")
+    ErrorTracker unawareErrorTracker();
+
+    // todo: add docs
+    @Contract(pure = true)
+    SdkInfo getSdkInfo();
 }

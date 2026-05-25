@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Contract;
  */
 public final class HytaleContext extends SimpleContext {
     public HytaleContext(final JavaPlugin plugin, @Token final String token) {
-        super(SimpleConfig.read(plugin.getDataDirectory().toAbsolutePath().getParent().resolve("faststats").resolve("config.properties")), token);
+        super(SimpleConfig.read(plugin.getDataDirectory().toAbsolutePath().getParent().resolve("faststats").resolve("config.properties")), "hytale", token);
     }
 
     @Override

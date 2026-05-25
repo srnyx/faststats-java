@@ -14,7 +14,7 @@ import java.nio.file.Path;
  */
 public final class MinestomContext extends SimpleContext {
     MinestomContext(@Token final String token) {
-        super(SimpleConfig.read(Path.of("faststats", "config.properties")), token);
+        super(SimpleConfig.read(Path.of("faststats", "config.properties")), "minestom", token);
     }
 
     @Override
