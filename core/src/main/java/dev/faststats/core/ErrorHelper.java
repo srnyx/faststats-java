@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -237,9 +238,12 @@ final class ErrorHelper {
                 "|((?i)[A-Z]:\\\\Users\\\\)[^\\\\\\s]+"); // Windows: A-Z:\\Users\\username
     }
 
+    private static final Set<String> allowedNames = Set.of("minecraft", "server", "root", "ubuntu");
+
     public static Optional<Pattern> usernamePattern() {
         return Optional.ofNullable(System.getProperty("user.name"))
                 .filter(s -> s.trim().length() > 2)
+                .filter(s -> !allowedNames.contains(s.toLowerCase(Locale.ROOT)))
                 .map(Pattern::quote)
                 .map(Pattern::compile);
     }
