@@ -16,8 +16,7 @@ public final class AnonymizationTest {
     private final ErrorTracker tracker = context.unawareErrorTracker();
 
     private JsonObject getError() {
-        final var data = metrics.createData();
-        return data.getAsJsonArray("errors").get(0).getAsJsonObject();
+        return ((SimpleErrorTracker) tracker).getData().get(0).getAsJsonObject();
     }
 
     private String getErrorMessage() {
