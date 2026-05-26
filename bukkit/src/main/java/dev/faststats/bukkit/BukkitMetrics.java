@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Contract;
  *
  * @since 0.1.0
  */
-public sealed interface BukkitMetrics extends Metrics permits BukkitMetricsImpl {
+public interface BukkitMetrics extends Metrics {
     /**
      * Creates a new metrics factory for Bukkit.
      *

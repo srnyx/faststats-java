@@ -168,7 +168,7 @@ public interface Metrics {
      *
      * @since 0.1.0
      */
-    sealed interface Config permits SimpleMetrics.Config {
+    interface Config {
         /**
          * The server id.
          *

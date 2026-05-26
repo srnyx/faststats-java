@@ -5,6 +5,8 @@ import com.google.gson.JsonObject;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -25,19 +27,19 @@ final class SimpleErrorTracker implements ErrorTracker {
     private final Map<Class<? extends Throwable>, Set<Pattern>> ignoredTypedPatterns = new ConcurrentHashMap<>();
     private final Set<Class<? extends Throwable>> ignoredTypes = new CopyOnWriteArraySet<>();
     private final Set<Pattern> ignoredPatterns = new CopyOnWriteArraySet<>();
-    private final List<Map.Entry<Pattern, String>> anonymizationEntries = new CopyOnWriteArrayList<>(List.of(
-            Map.entry(ErrorHelper.ipv4Pattern(), "[IP hidden]"),
-            Map.entry(ErrorHelper.ipv6Pattern(), "[IP hidden]"),
-            Map.entry(ErrorHelper.userHomePathPattern(), "$1$2$3[username hidden]"),
-            Map.entry(ErrorHelper.discordWebhookPattern(), "$1[token hidden]"),
-            Map.entry(ErrorHelper.jdbcUrlPattern(), "$1[password hidden]$2")
+    private final List<Map.Entry<Pattern, String>> anonymizationEntries = new CopyOnWriteArrayList<>(Arrays.asList(
+            new AbstractMap.SimpleEntry<>(ErrorHelper.ipv4Pattern(), "[IP hidden]"),
+            new AbstractMap.SimpleEntry<>(ErrorHelper.ipv6Pattern(), "[IP hidden]"),
+            new AbstractMap.SimpleEntry<>(ErrorHelper.userHomePathPattern(), "$1$2$3[username hidden]"),
+            new AbstractMap.SimpleEntry<>(ErrorHelper.discordWebhookPattern(), "$1[token hidden]"),
+            new AbstractMap.SimpleEntry<>(ErrorHelper.jdbcUrlPattern(), "$1[password hidden]$2")
     ));
 
     private volatile @Nullable BiConsumer<@Nullable ClassLoader, Throwable> errorEvent = null;
     private volatile @Nullable UncaughtExceptionHandler originalHandler = null;
 
     public SimpleErrorTracker() {
-        ErrorHelper.usernamePattern().ifPresent(pattern -> anonymizationEntries.add(Map.entry(pattern, "[username hidden]")));
+        ErrorHelper.usernamePattern().ifPresent(pattern -> anonymizationEntries.add(new AbstractMap.SimpleEntry<>(pattern, "[username hidden]")));
     }
 
     @Override
@@ -59,8 +61,8 @@ final class SimpleErrorTracker implements ErrorTracker {
     public void trackError(final Throwable error, final boolean handled) {
         try {
             if (isIgnored(error, Collections.newSetFromMap(new IdentityHashMap<>()))) return;
-            final var compiled = ErrorHelper.compile(error, null, handled, anonymizationEntries);
-            final var hashed = MurmurHash3.hash(compiled);
+            final JsonObject compiled = ErrorHelper.compile(error, null, handled, anonymizationEntries);
+            final String hashed = MurmurHash3.hash(compiled);
             if (collected.compute(hashed, (k, v) -> {
                 return v == null ? 1 : v + 1;
             }) > 1) return;
@@ -74,10 +76,10 @@ final class SimpleErrorTracker implements ErrorTracker {
 
         if (ignoredTypes.contains(error.getClass())) return true;
 
-        final var message = error.getMessage() != null ? error.getMessage() : "";
+        final String message = error.getMessage() != null ? error.getMessage() : "";
         if (ignoredPatterns.stream().map(pattern -> pattern.matcher(message)).anyMatch(Matcher::find)) return true;
 
-        final var patterns = ignoredTypedPatterns.get(error.getClass());
+        final Set<Pattern> patterns = ignoredTypedPatterns.get(error.getClass());
         if (patterns != null && patterns.stream().map(pattern -> pattern.matcher(message)).anyMatch(Matcher::find))
             return true;
 
@@ -104,25 +106,25 @@ final class SimpleErrorTracker implements ErrorTracker {
 
     @Override
     public ErrorTracker anonymize(final Pattern pattern, final String replacement) {
-        anonymizationEntries.add(Map.entry(pattern, replacement));
+        anonymizationEntries.add(new AbstractMap.SimpleEntry<>(pattern, replacement));
         return this;
     }
 
     public JsonArray getData(final String buildId) {
-        final var report = new JsonArray(reports.size());
+        final JsonArray report = new JsonArray(reports.size());
 
         reports.forEach((hash, object) -> {
-            final var copy = object.deepCopy();
+            final JsonObject copy = object.deepCopy();
             copy.addProperty("hash", hash);
             copy.addProperty("buildId", buildId);
-            final var count = collected.getOrDefault(hash, 1);
+            final Integer count = collected.getOrDefault(hash, 1);
             if (count > 1) copy.addProperty("count", count);
             report.add(copy);
         });
 
         collected.forEach((hash, count) -> {
             if (count <= 0 || reports.containsKey(hash)) return;
-            final var entry = new JsonObject();
+            final JsonObject entry = new JsonObject();
 
             entry.addProperty("hash", hash);
             if (count > 1) entry.addProperty("count", count);
@@ -143,11 +145,11 @@ final class SimpleErrorTracker implements ErrorTracker {
         if (originalHandler != null) throw new IllegalStateException("Error context already attached");
         originalHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
-            final var handler = originalHandler;
+            final UncaughtExceptionHandler handler = originalHandler;
             if (handler != null) handler.uncaughtException(thread, error);
             try {
                 if (loader != null && !ErrorTracker.isSameLoader(loader, error)) return;
-                final var event = errorEvent;
+                final BiConsumer<ClassLoader, Throwable> event = errorEvent;
                 if (event != null) event.accept(loader, error);
                 trackError(error, false);
             } catch (final Throwable t) {

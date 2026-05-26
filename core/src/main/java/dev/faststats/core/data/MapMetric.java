@@ -16,10 +16,10 @@ final class MapMetric<T> extends SimpleMetric<Map<String, ? extends T>> {
     @Override
     public Optional<JsonElement> getData() throws Exception {
         return compute().map(data -> {
-            final var object = new JsonObject();
+            final JsonObject object = new JsonObject();
             data.forEach((key, value) -> {
-                if (value instanceof final Boolean bool) object.addProperty(key, bool);
-                else if (value instanceof final Number number) object.addProperty(key, number);
+                if (value instanceof Boolean) object.addProperty(key, (Boolean) value);
+                else if (value instanceof Number) object.addProperty(key, (Number) value);
                 else object.addProperty(key, value.toString());
             });
             return object;

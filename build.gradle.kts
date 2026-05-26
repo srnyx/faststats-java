@@ -4,7 +4,8 @@ plugins {
 }
 
 val javaVersionsOverride = mapOf(
-    ":bukkit" to 21,
+    ":core" to 8,
+    ":bukkit" to 8,
     ":bukkit:example-plugin" to 21,
     ":fabric" to 21,
     ":fabric:example-mod" to 21,
@@ -41,8 +42,10 @@ subprojects {
         withJavadocJar()
     }
 
-    tasks.compileJava {
-        options.release.set(javaVersion)
+    if (javaVersion >= 17) {
+        tasks.compileJava {
+            options.release.set(javaVersion)
+        }
     }
 
     val generateFastStatsProperties by tasks.registering {

@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  *
  * @since 0.10.0
  */
-public sealed interface ErrorTracker permits SimpleErrorTracker {
+public interface ErrorTracker {
     /**
      * Create and attach a new context-aware error tracker.
      * <p>
@@ -29,7 +29,7 @@ public sealed interface ErrorTracker permits SimpleErrorTracker {
      */
     @Contract(value = " -> new")
     static ErrorTracker contextAware() {
-        final var tracker = new SimpleErrorTracker();
+        final SimpleErrorTracker tracker = new SimpleErrorTracker();
         tracker.attachErrorContext(ErrorTracker.class.getClassLoader());
         return tracker;
     }

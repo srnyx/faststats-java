@@ -9,17 +9,18 @@ import org.jetbrains.annotations.VisibleForTesting;
 import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.ConnectException;
+import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpConnectTimeoutException;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Properties;
@@ -35,10 +36,6 @@ import java.util.zip.GZIPOutputStream;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public abstract class SimpleMetrics implements Metrics {
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(3))
-            .version(HttpClient.Version.HTTP_1_1)
-            .build();
     private @Nullable ScheduledExecutorService executor = null;
 
     private final Set<Metric<?>> metrics;
@@ -54,8 +51,8 @@ public abstract class SimpleMetrics implements Metrics {
     private final String BUILD_ID;
 
     {
-        final var properties = new Properties();
-        try (final var stream = getClass().getResourceAsStream("/META-INF/faststats.properties")) {
+        final Properties properties = new Properties();
+        try (final InputStream stream = getClass().getResourceAsStream("/META-INF/faststats.properties")) {
             if (stream != null) properties.load(stream);
         } catch (final IOException ignored) {
         }
@@ -70,7 +67,7 @@ public abstract class SimpleMetrics implements Metrics {
         if (factory.token == null) throw new IllegalStateException("Token must be specified");
 
         this.config = config;
-        this.metrics = config.additionalMetrics ? Set.copyOf(factory.metrics) : Set.of();
+        this.metrics = config.additionalMetrics ? Collections.unmodifiableSet(new HashSet<>(factory.metrics)) : Collections.emptySet();
         this.debug = factory.debug || Boolean.getBoolean("faststats.debug") || config.debug();
         this.token = factory.token;
         this.tracker = config.errorTracking ? factory.tracker : null;
@@ -97,7 +94,7 @@ public abstract class SimpleMetrics implements Metrics {
             throw new IllegalArgumentException("Invalid token '" + token + "', must match '" + Token.PATTERN + "'");
         }
 
-        this.metrics = config.additionalMetrics ? Set.copyOf(metrics) : Set.of();
+        this.metrics = config.additionalMetrics ? Collections.unmodifiableSet(new HashSet<>(metrics)) : Collections.emptySet();
         this.config = config;
         this.debug = debug;
         this.token = token;
@@ -107,14 +104,13 @@ public abstract class SimpleMetrics implements Metrics {
     }
 
     protected String getOnboardingMessage() {
-        return """
-                This plugin uses FastStats to collect anonymous usage statistics.
-                No personal or identifying information is ever collected.
-                To opt out, set 'enabled=false' in the metrics configuration file.
-                Learn more at: https://faststats.dev/info
-                
-                Since this is your first start with FastStats, metrics submission will not start
-                until you restart the server to allow you to opt out if you prefer.""";
+        return "This plugin uses FastStats to collect anonymous usage statistics.\n"
+                + "No personal or identifying information is ever collected.\n"
+                + "To opt out, set 'enabled=false' in the metrics configuration file.\n"
+                + "Learn more at: https://faststats.dev/info\n"
+                + "\n"
+                + "Since this is your first start with FastStats, metrics submission will not start\n"
+                + "until you restart the server to allow you to opt out if you prefer.";
     }
 
     protected long getInitialDelay() {
@@ -139,19 +135,19 @@ public abstract class SimpleMetrics implements Metrics {
 
         if (config.firstRun) {
 
-            var separatorLength = 0;
-            final var split = getOnboardingMessage().split("\n");
-            for (final var s : split) if (s.length() > separatorLength) separatorLength = s.length();
+            int separatorLength = 0;
+            final String[] split = getOnboardingMessage().split("\n");
+            for (final String s : split) if (s.length() > separatorLength) separatorLength = s.length();
 
-            printInfo("-".repeat(separatorLength));
-            for (final var s : split) printInfo(s);
-            printInfo("-".repeat(separatorLength));
+            printInfo(String.join("", Collections.nCopies(separatorLength, "-")));
+            for (final String s : split) printInfo(s);
+            printInfo(String.join("", Collections.nCopies(separatorLength, "-")));
 
             System.setProperty("faststats.first-run", "true");
             if (!config.externallyManaged()) return;
         }
 
-        final var enabled = Boolean.parseBoolean(System.getProperty("faststats.enabled", "true"));
+        final boolean enabled = Boolean.parseBoolean(System.getProperty("faststats.enabled", "true"));
 
         if (!config.enabled() || !enabled) {
             warn("Metrics disabled, not starting submission");
@@ -164,7 +160,7 @@ public abstract class SimpleMetrics implements Metrics {
         }
 
         this.executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
-            final var thread = new Thread(runnable, "metrics-submitter");
+            final Thread thread = new Thread(runnable, "metrics-submitter");
             thread.setDaemon(true);
             return thread;
         });
@@ -187,58 +183,81 @@ public abstract class SimpleMetrics implements Metrics {
     }
 
     private boolean submitNow() throws IOException {
-        final var data = createData().toString();
-        final var bytes = data.getBytes(UTF_8);
+        final String data = createData().toString();
+        final byte[] bytes = data.getBytes(UTF_8);
 
         info("Uncompressed data: " + data);
 
-        try (final var byteOutput = new ByteArrayOutputStream();
-             final var output = new GZIPOutputStream(byteOutput)) {
+        try (final ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+             final GZIPOutputStream output = new GZIPOutputStream(byteOutput)) {
 
             output.write(bytes);
             output.finish();
 
-            final var compressed = byteOutput.toByteArray();
+            final byte[] compressed = byteOutput.toByteArray();
             info("Compressed size: " + compressed.length + " bytes");
 
-            final var request = HttpRequest.newBuilder()
-                    .POST(HttpRequest.BodyPublishers.ofByteArray(compressed))
-                    .header("Content-Encoding", "gzip")
-                    .header("Content-Type", "application/octet-stream")
-                    .header("Authorization", "Bearer " + getToken())
-                    .header("User-Agent", "FastStats Metrics " + SDK_NAME + "/" + SDK_VERSION)
-                    .timeout(Duration.ofSeconds(3))
-                    .uri(url)
-                    .build();
+            final HttpURLConnection connection = (HttpURLConnection) url.toURL().openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(3000);
+            connection.setReadTimeout(3000);
+            connection.setRequestProperty("Content-Encoding", "gzip");
+            connection.setRequestProperty("Content-Type", "application/octet-stream");
+            connection.setRequestProperty("Authorization", "Bearer " + getToken());
+            connection.setRequestProperty("User-Agent", "FastStats Metrics " + SDK_NAME + "/" + SDK_VERSION);
 
             info("Sending metrics to: " + url);
-            try {
-                final var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(UTF_8));
-                final var statusCode = response.statusCode();
-                final var body = response.body();
 
-                if (statusCode >= 200 && statusCode < 300) {
-                    info("Metrics submitted with status code: " + statusCode + " (" + body + ")");
-                    getErrorTracker().map(SimpleErrorTracker.class::cast).ifPresent(SimpleErrorTracker::clear);
-                    if (flush != null) flush.run();
-                    return true;
-                } else if (statusCode >= 300 && statusCode < 400) {
-                    warn("Received redirect response from metrics server: " + statusCode + " (" + body + ")");
-                } else if (statusCode >= 400 && statusCode < 500) {
-                    error("Submitted invalid request to metrics server: " + statusCode + " (" + body + ")", null);
-                } else if (statusCode >= 500 && statusCode < 600) {
-                    error("Received server error response from metrics server: " + statusCode + " (" + body + ")", null);
-                } else {
-                    warn("Received unexpected response from metrics server: " + statusCode + " (" + body + ")");
-                }
-            } catch (final HttpConnectTimeoutException t) {
-                error("Metrics submission timed out after 3 seconds: " + url, null);
-            } catch (final ConnectException t) {
-                error("Failed to connect to metrics server: " + url, null);
-            } catch (final Throwable t) {
-                error("Failed to submit metrics", t);
+            try (final OutputStream out = connection.getOutputStream()) {
+                out.write(compressed);
             }
+
+            final int statusCode = connection.getResponseCode();
+            final InputStream responseStream =
+                    statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream();
+
+            final String body = readBody(responseStream);
+
+            if (statusCode >= 200 && statusCode < 300) {
+                info("Metrics submitted with status code: " + statusCode + " (" + body + ")");
+                getErrorTracker().map(SimpleErrorTracker.class::cast).ifPresent(SimpleErrorTracker::clear);
+                if (flush != null) flush.run();
+                return true;
+            } else if (statusCode >= 300 && statusCode < 400) {
+                warn("Received redirect response from metrics server: " + statusCode + " (" + body + ")");
+            } else if (statusCode >= 400 && statusCode < 500) {
+                error("Submitted invalid request to metrics server: " + statusCode + " (" + body + ")", null);
+            } else if (statusCode >= 500 && statusCode < 600) {
+                error("Received server error response from metrics server: " + statusCode + " (" + body + ")", null);
+            } else {
+                warn("Received unexpected response from metrics server: " + statusCode + " (" + body + ")");
+            }
+
             return false;
+        } catch (final java.net.SocketTimeoutException t) {
+            error("Metrics submission timed out after 3 seconds: " + url, null);
+            return false;
+        } catch (final ConnectException t) {
+            error("Failed to connect to metrics server: " + url, null);
+            return false;
+        } catch (final Throwable t) {
+            error("Failed to submit metrics", t);
+            return false;
+        }
+    }
+
+    private static String readBody(final InputStream stream) throws IOException {
+        if (stream == null) return "";
+
+        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8))) {
+            final StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+                if (reader.ready()) sb.append('\n');
+            }
+            return sb.toString();
         }
     }
 
@@ -250,8 +269,8 @@ public abstract class SimpleMetrics implements Metrics {
     private final int coreCount = Runtime.getRuntime().availableProcessors();
 
     protected JsonObject createData() {
-        final var data = new JsonObject();
-        final var metrics = new JsonObject();
+        final JsonObject data = new JsonObject();
+        final JsonObject metrics = new JsonObject();
 
         metrics.addProperty("core_count", coreCount);
         metrics.addProperty("java_vendor", javaVendor);
@@ -390,32 +409,76 @@ public abstract class SimpleMetrics implements Metrics {
         }
     }
 
-    public record Config(
-            UUID serverId,
-            boolean additionalMetrics,
-            boolean debug,
-            boolean enabled,
-            boolean errorTracking,
-            boolean firstRun,
-            boolean externallyManaged
-    ) implements Metrics.Config {
+    public static final class Config implements Metrics.Config {
+        private final UUID serverId;
+        private final boolean additionalMetrics;
+        private final boolean debug;
+        private final boolean enabled;
+        private final boolean errorTracking;
+        private final boolean firstRun;
+        private final boolean externallyManaged;
 
-        public static final String DEFAULT_COMMENT = """
-                 FastStats (https://faststats.dev) collects anonymous usage statistics for plugin developers.
-                # This helps developers understand how their projects are used in the real world.
-                #
-                # No IP addresses, player data, or personal information is collected.
-                # The server ID below is randomly generated and can be regenerated at any time.
-                #
-                # Enabling metrics has no noticeable performance impact.
-                # Keeping metrics enabled is recommended, but you can opt out by setting
-                # 'enabled=false' in plugins/faststats/config.properties.
-                #
-                # If you suspect a plugin is collecting personal data or bypassing the "enabled" option,
-                # please report it at: https://faststats.dev/abuse
-                #
-                # For more information, visit: https://faststats.dev/info
-                """;
+        public Config(
+                UUID serverId,
+                boolean additionalMetrics,
+                boolean debug,
+                boolean enabled,
+                boolean errorTracking,
+                boolean firstRun,
+                boolean externallyManaged
+        ) {
+            this.serverId = serverId;
+            this.additionalMetrics = additionalMetrics;
+            this.debug = debug;
+            this.enabled = enabled;
+            this.errorTracking = errorTracking;
+            this.firstRun = firstRun;
+            this.externallyManaged = externallyManaged;
+        }
+
+        public UUID serverId() {
+            return serverId;
+        }
+
+        public boolean additionalMetrics() {
+            return additionalMetrics;
+        }
+
+        public boolean debug() {
+            return debug;
+        }
+
+        public boolean enabled() {
+            return enabled;
+        }
+
+        public boolean errorTracking() {
+            return errorTracking;
+        }
+
+        public boolean firstRun() {
+            return firstRun;
+        }
+
+        public boolean externallyManaged() {
+            return externallyManaged;
+        }
+
+        public static final String DEFAULT_COMMENT =
+                " FastStats (https://faststats.dev) collects anonymous usage statistics for plugin developers.\n" +
+                "# This helps developers understand how their projects are used in the real world.\n" +
+                "#\n" +
+                "# No IP addresses, player data, or personal information is collected.\n" +
+                "# The server ID below is randomly generated and can be regenerated at any time.\n" +
+                "#\n" +
+                "# Enabling metrics has no noticeable performance impact.\n" +
+                "# Keeping metrics enabled is recommended, but you can opt out by setting\n" +
+                "# 'enabled=false' in plugins/faststats/config.properties.\n" +
+                "#\n" +
+                "# If you suspect a plugin is collecting personal data or bypassing the \"enabled\" option,\n" +
+                "# please report it at: https://faststats.dev/abuse\n" +
+                "#\n" +
+                "# For more information, visit: https://faststats.dev/info";
 
         @Contract(mutates = "io")
         public static Config read(final Path file) throws RuntimeException {
@@ -424,14 +487,14 @@ public abstract class SimpleMetrics implements Metrics {
 
         @Contract(mutates = "io")
         public static Config read(final Path file, final String comment, final boolean externallyManaged, final boolean externallyEnabled) throws RuntimeException {
-            final var properties = readOrEmpty(file);
-            final var firstRun = properties.isEmpty();
-            final var saveConfig = new AtomicBoolean(firstRun);
+            final Optional<Properties> properties = readOrEmpty(file);
+            final boolean firstRun = !properties.isPresent();
+            final AtomicBoolean saveConfig = new AtomicBoolean(firstRun);
 
-            final var serverId = properties.map(object -> object.getProperty("serverId")).map(string -> {
+            final UUID serverId = properties.map(object -> object.getProperty("serverId")).map(string -> {
                 try {
-                    final var trimmed = string.trim();
-                    final var corrected = trimmed.length() > 36 ? trimmed.substring(0, 36) : trimmed;
+                    final String trimmed = string.trim();
+                    final String corrected = trimmed.length() > 36 ? trimmed.substring(0, 36) : trimmed;
                     if (!corrected.equals(string)) saveConfig.set(true);
                     return UUID.fromString(corrected);
                 } catch (final IllegalArgumentException e) {
@@ -450,10 +513,10 @@ public abstract class SimpleMetrics implements Metrics {
                 });
             };
 
-            final var enabled = externallyManaged ? externallyEnabled : predicate.test("enabled", true);
-            final var errorTracking = predicate.test("submitErrors", true);
-            final var additionalMetrics = predicate.test("submitAdditionalMetrics", true);
-            final var debug = predicate.test("debug", false);
+            final boolean enabled = externallyManaged ? externallyEnabled : predicate.test("enabled", true);
+            final boolean errorTracking = predicate.test("submitErrors", true);
+            final boolean additionalMetrics = predicate.test("submitAdditionalMetrics", true);
+            final boolean debug = predicate.test("debug", false);
 
             if (saveConfig.get()) try {
                 save(file, externallyManaged, comment, serverId, enabled, errorTracking, additionalMetrics, debug);
@@ -466,8 +529,8 @@ public abstract class SimpleMetrics implements Metrics {
 
         private static Optional<Properties> readOrEmpty(final Path file) throws RuntimeException {
             if (!Files.isRegularFile(file)) return Optional.empty();
-            try (final var reader = Files.newBufferedReader(file, UTF_8)) {
-                final var properties = new Properties();
+            try (final BufferedReader reader = Files.newBufferedReader(file, UTF_8)) {
+                final Properties properties = new Properties();
                 properties.load(reader);
                 return Optional.of(properties);
             } catch (final IOException e) {
@@ -477,9 +540,9 @@ public abstract class SimpleMetrics implements Metrics {
 
         private static void save(final Path file, final boolean externallyManaged, final String comment, final UUID serverId, final boolean enabled, final boolean errorTracking, final boolean additionalMetrics, final boolean debug) throws IOException {
             Files.createDirectories(file.getParent());
-            try (final var out = Files.newOutputStream(file);
-                 final var writer = new OutputStreamWriter(out, UTF_8)) {
-                final var properties = new Properties();
+            try (final OutputStream out = Files.newOutputStream(file);
+                 final OutputStreamWriter writer = new OutputStreamWriter(out, UTF_8)) {
+                final Properties properties = new Properties();
 
                 properties.setProperty("serverId", serverId.toString());
                 if (!externallyManaged) properties.setProperty("enabled", Boolean.toString(enabled));

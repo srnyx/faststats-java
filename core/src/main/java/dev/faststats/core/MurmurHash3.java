@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
  */
 final class MurmurHash3 {
     public static String hash(final JsonObject object) {
-        final var hash = MurmurHash3.hash(object.toString());
+        final long[] hash = MurmurHash3.hash(object.toString());
         return Long.toHexString(hash[0]) + Long.toHexString(hash[1]);
     }
 
@@ -39,20 +39,20 @@ final class MurmurHash3 {
      */
     @Contract(value = "_ -> new", pure = true)
     private static long[] hash(final String data) {
-        final var bytes = data.getBytes(StandardCharsets.UTF_8);
-        var h1 = 0L;
-        var h2 = 0L;
-        final var c1 = 0x87c37b91114253d5L;
-        final var c2 = 0x4cf5ad432745937fL;
-        final var length = bytes.length;
-        final var blocks = length / 16;
+        final byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+        long h1 = 0L;
+        long h2 = 0L;
+        final long c1 = 0x87c37b91114253d5L;
+        final long c2 = 0x4cf5ad432745937fL;
+        final int length = bytes.length;
+        final int blocks = length / 16;
 
         // Process 128-bit blocks
         for (int i = 0; i < blocks; i++) {
-            var k1 = getInt(bytes, i * 16);
-            var k2 = getInt(bytes, i * 16 + 4);
-            final var k3 = getInt(bytes, i * 16 + 8);
-            final var k4 = getInt(bytes, i * 16 + 12);
+            int k1 = getInt(bytes, i * 16);
+            int k2 = getInt(bytes, i * 16 + 4);
+            final int k3 = getInt(bytes, i * 16 + 8);
+            final int k4 = getInt(bytes, i * 16 + 12);
 
             k1 *= (int) c1;
             k1 = Integer.rotateLeft(k1, 31);
@@ -74,11 +74,11 @@ final class MurmurHash3 {
         }
 
         // Tail
-        var k1 = 0;
-        var k2 = 0;
-        var k3 = 0;
-        var k4 = 0;
-        final var tail = blocks * 16;
+        int k1 = 0;
+        int k2 = 0;
+        int k3 = 0;
+        int k4 = 0;
+        final int tail = blocks * 16;
 
         switch (length & 15) {
             case 15:

@@ -15,10 +15,10 @@ final class ArrayMetric<T> extends SimpleMetric<T[]> {
     @Override
     public Optional<JsonElement> getData() throws Exception {
         return compute().map(data -> {
-            final var elements = new JsonArray(data.length);
-            for (final var d : data) {
-                if (d instanceof final Boolean b) elements.add(b);
-                else if (d instanceof final Number n) elements.add(n);
+            final JsonArray elements = new JsonArray(data.length);
+            for (final T d : data) {
+                if (d instanceof Boolean) elements.add((Boolean) d);
+                else if (d instanceof Number) elements.add((Number) d);
                 else elements.add(d.toString());
             }
             return elements;
