@@ -13,7 +13,6 @@ import org.jetbrains.annotations.VisibleForTesting;
 import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -122,17 +121,13 @@ public abstract class SimpleMetrics implements Metrics {
         return executor != null && !executor.isShutdown();
     }
 
-    @VisibleForTesting
-    public boolean submit() {
-        try {
-            return submitNow();
-        } catch (final Throwable t) {
-            logger.error("Failed to submit metrics", t);
-            return false;
-        }
+    protected final void trackError(final Throwable error, final boolean handled) {
+        context.errorTrackingSink().track(error, handled);
     }
 
-    private boolean submitNow() throws IOException {
+    // todo: improve logging to be less cluttered
+    @VisibleForTesting
+    public boolean submit() {
         final var data = createData().toString();
         final var bytes = data.getBytes(UTF_8);
 
@@ -148,45 +143,43 @@ public abstract class SimpleMetrics implements Metrics {
             logger.info("Compressed size: %s bytes", compressed.length);
 
             final var sdk = context.getSdkInfo();
+            final var agent = "FastStats Metrics " + sdk.getName() + "/" + sdk.getVersion();
             final var request = HttpRequest.newBuilder()
                     .POST(HttpRequest.BodyPublishers.ofByteArray(compressed))
                     .header("Content-Encoding", "gzip")
                     .header("Content-Type", "application/octet-stream")
                     .header("Authorization", "Bearer " + context.getToken())
-                    .header("User-Agent", "FastStats Metrics " + sdk.getName() + "/" + sdk.getVersion())
+                    .header("User-Agent", agent)
                     .timeout(Duration.ofSeconds(3))
                     .uri(url)
                     .build();
 
             logger.info("Sending metrics to: %s", url);
-            try {
-                final var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(UTF_8));
-                final var statusCode = response.statusCode();
-                final var body = response.body();
+            final var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(UTF_8));
+            final var statusCode = response.statusCode();
+            final var body = response.body();
 
-                if (statusCode >= 200 && statusCode < 300) {
-                    logger.info("Metrics submitted with status code: %s (%s)", statusCode, body);
-                    context.errorTrackers().stream().map(SimpleErrorTracker.class::cast).forEach(SimpleErrorTracker::clear);
-                    if (flush != null) flush.run();
-                    return true;
-                } else if (statusCode >= 300 && statusCode < 400) {
-                    logger.warn("Received redirect response from metrics server: %s (%s)", statusCode, body);
-                } else if (statusCode >= 400 && statusCode < 500) {
-                    logger.error("Submitted invalid request to metrics server: %s (%s)", null, statusCode, body);
-                } else if (statusCode >= 500 && statusCode < 600) {
-                    logger.error("Received server error response from metrics server: %s (%s)", null, statusCode, body);
-                } else {
-                    logger.warn("Received unexpected response from metrics server: %s (%s)", statusCode, body);
-                }
-            } catch (final HttpConnectTimeoutException t) {
-                logger.error("Metrics submission timed out after 3 seconds: %s", null, url);
-            } catch (final ConnectException t) {
-                logger.error("Failed to connect to metrics server: %s", null, url);
-            } catch (final Throwable t) {
-                logger.error("Failed to submit metrics", t);
+            if (statusCode >= 200 && statusCode < 300) {
+                logger.info("Metrics submitted with status code: %s (%s)", statusCode, body);
+                if (flush != null) flush.run();
+                return true;
+            } else if (statusCode >= 300 && statusCode < 400) {
+                logger.warn("Received redirect response from metrics server: %s (%s)", statusCode, body);
+            } else if (statusCode >= 400 && statusCode < 500) {
+                logger.error("Submitted invalid request to metrics server: %s (%s)", null, statusCode, body);
+            } else if (statusCode >= 500 && statusCode < 600) {
+                logger.error("Received server error response from metrics server: %s (%s)", null, statusCode, body);
+            } else {
+                logger.warn("Received unexpected response from metrics server: %s (%s)", statusCode, body);
             }
-            return false;
+        } catch (final HttpConnectTimeoutException t) {
+            logger.error("Metrics submission timed out after 3 seconds: %s", null, url);
+        } catch (final ConnectException t) {
+            logger.error("Failed to connect to metrics server: %s", null, url);
+        } catch (final Throwable t) {
+            logger.error("Failed to submit metrics", t);
         }
+        return false;
     }
 
     private static final String javaVendor = System.getProperty("java.vendor");
