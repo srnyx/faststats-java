@@ -10,9 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class AnonymizationTest {
-    private static final SimpleErrorTracker TRACKER = (SimpleErrorTracker) ErrorTracker.unaware();
-    private final FastStatsContext context = new MockContext(TRACKER);
-    private final MockMetrics metrics = (MockMetrics) context.metricsFactory().create();
+    private static final SimpleErrorTracker TRACKER = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+    private final FastStatsContext context = new MockContext.Factory(TRACKER)
+            .metrics(Metrics.Factory::create)
+            .create();
 
     private JsonObject getError() {
         return TRACKER.getData().get(0).getAsJsonObject();

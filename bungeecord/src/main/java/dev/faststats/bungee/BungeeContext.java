@@ -1,5 +1,6 @@
 package dev.faststats.bungee;
 
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -16,14 +17,14 @@ import org.jetbrains.annotations.Contract;
 public final class BungeeContext extends SimpleContext {
     final Plugin plugin;
 
-    public BungeeContext(final Plugin plugin, @Token final String token) {
+    private BungeeContext(final Plugin plugin, @Token final String token) {
         super(SimpleConfig.read(plugin.getProxy().getPluginsFolder().toPath().resolve("faststats").resolve("config.properties")), "bungeecord", token);
         this.plugin = plugin;
     }
 
     @Override
     @Contract(value = " -> new", pure = true)
-    public Metrics.Factory metricsFactory() {
+    protected Metrics.Factory metricsFactory() {
         return new SimpleMetrics.Factory(this) {
             @Override
             public Metrics create() throws IllegalStateException {
@@ -35,5 +36,20 @@ public final class BungeeContext extends SimpleContext {
     @Override
     public String getProjectName() {
         return plugin.getDescription().getName();
+    }
+
+    public static final class Factory extends FastStatsContextFactory<BungeeContext, Factory> {
+        private final Plugin plugin;
+        private final @Token String token;
+
+        public Factory(final Plugin plugin, @Token final String token) {
+            this.plugin = plugin;
+            this.token = token;
+        }
+
+        @Override
+        protected BungeeContext createContext() {
+            return new BungeeContext(plugin, token);
+        }
     }
 }

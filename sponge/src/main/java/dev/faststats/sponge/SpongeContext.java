@@ -1,11 +1,13 @@
 package dev.faststats.sponge;
 
 import com.google.inject.Inject;
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
 import dev.faststats.Token;
 import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.plugin.PluginContainer;
 
@@ -30,7 +32,7 @@ public final class SpongeContext extends SimpleContext {
 
     @Override
     @Contract(value = " -> new", pure = true)
-    public Metrics.Factory metricsFactory() {
+    protected Metrics.Factory metricsFactory() {
         return new SimpleMetrics.Factory(this) {
             @Override
             public Metrics create() throws IllegalStateException {
@@ -49,9 +51,11 @@ public final class SpongeContext extends SimpleContext {
      *
      * @since 0.24.0
      */
-    public static final class Builder {
+    public static class Factory extends FastStatsContextFactory<SpongeContext, Factory> {
         private final PluginContainer plugin;
         private final Path dataDirectory;
+        private @Token
+        @Nullable String token;
 
         /**
          * Creates a new Sponge context builder.
@@ -62,7 +66,7 @@ public final class SpongeContext extends SimpleContext {
          * @since 0.24.0
          */
         @Inject
-        public Builder(
+        public Factory(
                 final PluginContainer plugin,
                 @ConfigDir(sharedRoot = true) final Path dataDirectory
         ) {
@@ -70,16 +74,31 @@ public final class SpongeContext extends SimpleContext {
             this.dataDirectory = dataDirectory;
         }
 
-        /**
-         * Builds the finalized Sponge context.
-         *
-         * @param token the FastStats project token
-         * @return the Sponge context
-         * @throws IllegalArgumentException if the token is invalid
-         * @since 0.24.0
-         */
-        public SpongeContext build(@Token final String token) throws IllegalArgumentException {
+        // todo: document
+        public SpongeContext.Factory token(@Token final String token) throws IllegalArgumentException {
+            this.token = token;
+            return this;
+        }
+
+        @Override
+        protected SpongeContext createContext() {
+            if (token == null) throw new IllegalStateException("Token not configured");
             return new SpongeContext(plugin, dataDirectory, token);
+        }
+    }
+
+    /**
+     * Injectable Sponge context builder.
+     *
+     * @since 0.24.0
+     */
+    public static final class Builder extends Factory {
+        @Inject
+        public Builder(
+                final PluginContainer plugin,
+                @ConfigDir(sharedRoot = true) final Path dataDirectory
+        ) {
+            super(plugin, dataDirectory);
         }
     }
 }

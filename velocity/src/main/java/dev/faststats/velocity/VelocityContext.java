@@ -4,12 +4,14 @@ import com.google.inject.Inject;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
 import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
 import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 
@@ -35,7 +37,7 @@ public final class VelocityContext extends SimpleContext {
 
     @Override
     @Contract(value = " -> new", pure = true)
-    public Metrics.Factory metricsFactory() {
+    protected Metrics.Factory metricsFactory() {
         return new SimpleMetrics.Factory(this) {
             @Override
             public Metrics create() throws IllegalStateException {
@@ -54,10 +56,12 @@ public final class VelocityContext extends SimpleContext {
      *
      * @since 0.24.0
      */
-    public static final class Builder {
+    public static class Factory extends FastStatsContextFactory<VelocityContext, Factory> {
         private final PluginContainer plugin;
         private final ProxyServer server;
         private final Path dataDirectory;
+        private @Token
+        @Nullable String token;
 
         /**
          * Creates a new Velocity context builder.
@@ -68,7 +72,7 @@ public final class VelocityContext extends SimpleContext {
          * @since 0.24.0
          */
         @Inject
-        public Builder(
+        public Factory(
                 final PluginContainer plugin,
                 final ProxyServer server,
                 @DataDirectory final Path dataDirectory
@@ -78,16 +82,32 @@ public final class VelocityContext extends SimpleContext {
             this.dataDirectory = dataDirectory;
         }
 
-        /**
-         * Builds the finalized Velocity context.
-         *
-         * @param token the FastStats project token
-         * @return the Velocity context
-         * @throws IllegalArgumentException if the token is invalid
-         * @since 0.24.0
-         */
-        public VelocityContext build(@Token final String token) throws IllegalArgumentException {
+        // todo: document
+        public Factory token(@Token final String token) {
+            this.token = token;
+            return this;
+        }
+
+        @Override
+        protected VelocityContext createContext() {
+            if (token == null) throw new IllegalStateException("Token not configured");
             return new VelocityContext(plugin, server, dataDirectory, token);
+        }
+    }
+
+    /**
+     * Injectable Velocity context builder.
+     *
+     * @since 0.24.0
+     */
+    public static final class Builder extends Factory {
+        @Inject
+        public Builder(
+                final PluginContainer plugin,
+                final ProxyServer server,
+                @DataDirectory final Path dataDirectory
+        ) {
+            super(plugin, server, dataDirectory);
         }
     }
 }

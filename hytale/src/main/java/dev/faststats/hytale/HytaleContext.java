@@ -1,6 +1,7 @@
 package dev.faststats.hytale;
 
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -16,14 +17,14 @@ import org.jetbrains.annotations.Contract;
 public final class HytaleContext extends SimpleContext {
     private final String pluginName;
     
-    public HytaleContext(final JavaPlugin plugin, @Token final String token) {
+    private HytaleContext(final JavaPlugin plugin, @Token final String token) {
         super(SimpleConfig.read(plugin.getDataDirectory().toAbsolutePath().getParent().resolve("faststats").resolve("config.properties")), "hytale", token);
         this.pluginName = plugin.getName();
     }
 
     @Override
     @Contract(value = " -> new", pure = true)
-    public Metrics.Factory metricsFactory() {
+    protected Metrics.Factory metricsFactory() {
         return new SimpleMetrics.Factory(this) {
             @Override
             public Metrics create() throws IllegalStateException {
@@ -36,5 +37,20 @@ public final class HytaleContext extends SimpleContext {
     @Override
     public String getProjectName() {
         return pluginName;
+    }
+
+    public static final class Factory extends FastStatsContextFactory<HytaleContext, Factory> {
+        private final JavaPlugin plugin;
+        private final @Token String token;
+
+        public Factory(final JavaPlugin plugin, @Token final String token) {
+            this.plugin = plugin;
+            this.token = token;
+        }
+
+        @Override
+        protected HytaleContext createContext() {
+            return new HytaleContext(plugin, token);
+        }
     }
 }

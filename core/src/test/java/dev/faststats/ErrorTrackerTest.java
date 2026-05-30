@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ErrorTrackerTest {
-    private static final SimpleErrorTracker TRACKER = (SimpleErrorTracker) ErrorTracker.unaware();
-    private final MockContext context = new MockContext(TRACKER);
+    private static final SimpleErrorTracker TRACKER = (SimpleErrorTracker) ErrorTracker.contextUnaware();
+    private final MockContext context = new MockContext.Factory(TRACKER).create();
 
     @Test
     public void sameClassLoader() {

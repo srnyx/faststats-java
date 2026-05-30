@@ -1,5 +1,6 @@
 package dev.faststats.minestom;
 
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.SimpleContext;
 import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
@@ -20,12 +21,25 @@ public final class MinestomContext extends SimpleContext {
 
     @Override
     @Contract(value = " -> new", pure = true)
-    public MinestomMetrics.Factory metricsFactory() {
+    protected MinestomMetrics.Factory metricsFactory() {
         return new MinestomMetricsImpl.Factory(this);
     }
 
     @Override
     public String getProjectName() {
         return MinecraftServer.getBrandName();
+    }
+
+    public static final class Factory extends FastStatsContextFactory<MinestomContext> {
+        private final @Token String token;
+
+        public Factory(@Token final String token) {
+            this.token = token;
+        }
+
+        @Override
+        protected MinestomContext createContext() {
+            return new MinestomContext(token);
+        }
     }
 }

@@ -8,7 +8,7 @@ import java.util.Optional;
  * Shared FastStats context.
  * <p>
  * Platform-specific contexts should extend this class to provide a shared
- * configuration, token, and metrics factory for their environment.
+ * configuration, token, metrics, and feature flag service for their environment.
  *
  * @since 0.24.0
  */
@@ -33,24 +33,22 @@ public sealed interface FastStatsContext permits SimpleContext {
     String getToken();
 
     /**
-     * Creates a new platform metrics factory bound to this context.
+     * Gets the metrics instance bound to this context.
      *
-     * @return a new platform metrics factory
+     * @return the context metrics instance, if one was configured
      * @since 0.24.0
      */
-    // todo: if the context is replaced with a factory pattern make the metrics instance context wide so only one can exist and querying the metrics instance is done ON the context
-    @Contract(value = "-> new", pure = true)
-    Metrics.Factory metricsFactory();
+    @Contract(pure = true)
+    Optional<Metrics> metrics();
 
     /**
-     * Creates a new feature flag service factory bound to this context.
+     * Gets the feature flag service bound to this context.
      *
-     * @return a new feature flag service factory
+     * @return the context feature flag service, if one was configured
      * @since 0.24.0
      */
-    // todo: if the context is replaced with a factory pattern make the feature flag service instance context wide so only one can exist and querying the service instance is done ON the context
-    @Contract(value = "-> new", pure = true)
-    FeatureFlagService.Factory featureFlagServiceFactory();
+    @Contract(pure = true)
+    Optional<FeatureFlagService> featureFlagService();
 
     /**
      * Get the registered internal/global error tracker, if one was configured.
@@ -61,10 +59,23 @@ public sealed interface FastStatsContext permits SimpleContext {
     @Contract(pure = true)
     Optional<ErrorTracker> errorTracker();
 
-    // todo: only one global error tracker can exist, let it be defined on the context factory
-    FastStatsContext globalErrorTracker(ErrorTracker errorTracker);
-
+    // todo: document
     FastStatsContext registerErrorTracker(ErrorTracker errorTracker);
+
+    /**
+     * Performs additional post-startup tasks for configured context services.
+     *
+     * @since 0.24.0
+     */
+    void ready();
+
+    /**
+     * Safely shuts down configured context services.
+     *
+     * @since 0.24.0
+     */
+    @Contract(mutates = "this")
+    void shutdown();
 
     /**
      * Get the SDK information shared by services created from this context.

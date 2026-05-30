@@ -1,5 +1,6 @@
 package dev.faststats.fabric;
 
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -17,7 +18,7 @@ import org.jetbrains.annotations.Contract;
 public final class FabricContext extends SimpleContext {
     final ModContainer mod;
 
-    public FabricContext(final String modId, @Token final String token) {
+    private FabricContext(final String modId, @Token final String token) {
         super(SimpleConfig.read(FabricLoader.getInstance().getConfigDir().resolve("faststats").resolve("config.properties")), "fabric", token);
         this.mod = FabricLoader.getInstance().getModContainer(modId).orElseThrow(() -> {
             return new IllegalArgumentException("Mod not found: " + modId);
@@ -26,7 +27,7 @@ public final class FabricContext extends SimpleContext {
 
     @Override
     @Contract(value = " -> new", pure = true)
-    public Metrics.Factory metricsFactory() {
+    protected Metrics.Factory metricsFactory() {
         return new SimpleMetrics.Factory(this) {
             @Override
             public Metrics create() throws IllegalStateException {
@@ -42,5 +43,20 @@ public final class FabricContext extends SimpleContext {
     @Override
     public String getProjectName() {
         return mod.getMetadata().getId();
+    }
+
+    public static final class Factory extends FastStatsContextFactory<FabricContext, Factory> {
+        private final String modId;
+        private final @Token String token;
+
+        public Factory(final String modId, @Token final String token) {
+            this.modId = modId;
+            this.token = token;
+        }
+
+        @Override
+        protected FabricContext createContext() {
+            return new FabricContext(modId, token);
+        }
     }
 }

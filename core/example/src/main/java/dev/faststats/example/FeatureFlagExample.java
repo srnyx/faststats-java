@@ -2,19 +2,25 @@ package dev.faststats.example;
 
 import dev.faststats.Attributes;
 import dev.faststats.FastStatsContext;
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.FeatureFlag;
 import dev.faststats.FeatureFlagService;
 
 import java.time.Duration;
 
 public final class FeatureFlagExample {
-    public static final FeatureFlagService SERVICE = getContext().featureFlagServiceFactory()
-            .attributes(Attributes.create() // Define global attributes
-                    .put("version", "1.2.3")
-                    .put("java_version", System.getProperty("java.version"))
-                    .put("java_vendor", System.getProperty("java.vendor")))
-            .ttl(Duration.ofMinutes(10)) // Custom cache TTL for resolved flag values
+    public static final FastStatsContext CONTEXT = getContextFactory()
+            // .featureFlagService(FeatureFlagService.Factory::create) // Define a feature flag service with default settings
+            .featureFlagService(factory -> factory
+                    .attributes(Attributes.create() // Define global attributes
+                            .put("version", "1.2.3")
+                            .put("java_version", System.getProperty("java.version"))
+                            .put("java_vendor", System.getProperty("java.vendor")))
+                    .ttl(Duration.ofMinutes(10)) // Custom cache TTL for resolved flag values
+                    .create())
             .create();
+
+    public static final FeatureFlagService SERVICE = CONTEXT.featureFlagService().orElseThrow();
 
     // Define flags with default values
     public static final FeatureFlag<Boolean> NEW_COMMANDS = SERVICE.define("new_commands", false);
@@ -62,7 +68,7 @@ public final class FeatureFlagExample {
         });
     }
 
-    private static FastStatsContext getContext() {
+    private static FastStatsContextFactory<?, ?> getContextFactory() {
         return null;
     }
 }

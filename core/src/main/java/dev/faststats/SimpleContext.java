@@ -1,7 +1,7 @@
 package dev.faststats;
 
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -9,15 +9,14 @@ import java.util.Optional;
 import java.util.Properties;
 
 // fixme: thread safety
-// todo: cleanup
-// todo: introduce a factory pattern to shorten the constructor?
-@ApiStatus.Internal
 public non-sealed abstract class SimpleContext implements FastStatsContext {
     private final ErrorTrackingSink errorTrackingSink = new ErrorTrackingSink(this);
 
     private final Config config;
     private final @Token String token;
     private final SdkInfo sdkInfo;
+    private @Nullable Metrics metrics;
+    private @Nullable FeatureFlagService featureFlagService;
 
     /**
      * Creates a new context that stores the shared configuration and token for all FastStats services.
@@ -74,23 +73,41 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
     }
 
     @Override
+    @Contract(pure = true)
+    public final Optional<Metrics> metrics() {
+        return Optional.ofNullable(metrics);
+    }
+
+    @Override
+    @Contract(pure = true)
+    public final Optional<FeatureFlagService> featureFlagService() {
+        return Optional.ofNullable(featureFlagService);
+    }
+
     @Contract(value = " -> new", pure = true)
-    public final FeatureFlagService.Factory featureFlagServiceFactory() {
+    protected abstract Metrics.Factory metricsFactory();
+
+    @Contract(value = " -> new", pure = true)
+    protected FeatureFlagService.Factory featureFlagServiceFactory() {
         return new SimpleFeatureFlagService.Factory(config, token);
+    }
+
+    final void setMetrics(final Metrics metrics) {
+        this.metrics = metrics;
+    }
+
+    final void setFeatureFlagService(final FeatureFlagService featureFlagService) {
+        this.featureFlagService = featureFlagService;
     }
 
     @Override
     @Contract(pure = true)
     public final Optional<ErrorTracker> errorTracker() {
-        // todo: do we even want the error tracker to be option? or just throw if not configured?
         return errorTrackingSink.internalErrorTracker();
     }
 
-    @Override
-    public FastStatsContext globalErrorTracker(final ErrorTracker errorTracker) {
-        // todo: do we want to allow reinitialization? maybe a factory pattern for the context is the better go to here
+    final void setErrorTracker(final ErrorTracker errorTracker) {
         errorTrackingSink.setInternalErrorTracker(errorTracker);
-        return this;
     }
 
     @Override
@@ -98,6 +115,17 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
         errorTrackingSink.errorTrackers.add((SimpleErrorTracker) tracker);
         errorTrackingSink.startErrorSubmission();
         return this;
+    }
+
+    @Override
+    public final void ready() {
+        if (metrics != null) metrics.ready();
+    }
+
+    @Override
+    public final void shutdown() {
+        if (metrics != null) metrics.shutdown();
+        if (featureFlagService != null) featureFlagService.shutdown();
     }
 
     @Override

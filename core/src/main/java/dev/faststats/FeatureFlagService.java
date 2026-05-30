@@ -8,7 +8,7 @@ import java.util.Optional;
 /**
  * A service for managing feature flags.
  * <p>
- * Use {@link FastStatsContext#featureFlagServiceFactory()} to construct a service instance.
+ * Use {@link FastStatsContext#featureFlagService()} to access the context service instance.
  *
  * @since 0.24.0
  */

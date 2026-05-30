@@ -21,9 +21,26 @@ public sealed interface ErrorTracker permits SimpleErrorTracker {
      * @since 0.24.0
      */
     @Contract(value = " -> new", pure = true)
-    static ErrorTracker aware() {
+    static ErrorTracker contextAware() {
+        return contextAware(ErrorTracker.class.getClassLoader());
+    }
+
+    /**
+     * Creates a context-aware error tracker policy for the given class loader.
+     * <p>
+     * The returned tracker has its error context attached immediately. If the class
+     * loader is {@code null}, the tracker will track all errors.
+     *
+     * @param classLoader the class loader whose errors should be tracked, or {@code null} to track all errors
+     * @return the error tracker policy
+     * @throws IllegalStateException if the error context is already attached
+     * @see #attachErrorContext(ClassLoader)
+     * @since 0.24.0
+     */
+    @Contract(value = "_ -> new", pure = true)
+    static ErrorTracker contextAware(@Nullable final ClassLoader classLoader) {
         final var tracker = new SimpleErrorTracker();
-        tracker.attachErrorContext(ErrorTracker.class.getClassLoader());
+        tracker.attachErrorContext(classLoader);
         return tracker;
     }
 
@@ -34,11 +51,12 @@ public sealed interface ErrorTracker permits SimpleErrorTracker {
      * @since 0.24.0
      */
     @Contract(value = " -> new", pure = true)
-    static ErrorTracker unaware() {
+    static ErrorTracker contextUnaware() {
         return new SimpleErrorTracker();
     }
-    
+
     // todo: return tracker object to supply additional information
+
     /**
      * Tracks a handled  error.
      *
@@ -60,7 +78,8 @@ public sealed interface ErrorTracker permits SimpleErrorTracker {
     @Contract(mutates = "this")
     void trackError(Throwable error);
 
-    // todo: remove handled overloads
+    // todo: remove handled overloads and move into the tracker object
+
     /**
      * Tracks an error.
      * <p>

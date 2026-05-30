@@ -1,6 +1,6 @@
 package dev.faststats.bukkit;
 
-import dev.faststats.ErrorTracker;
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.SimpleContext;
 import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
@@ -17,21 +17,15 @@ import java.nio.file.Path;
 public final class BukkitContext extends SimpleContext {
     final Plugin plugin;
 
-    public BukkitContext(final Plugin plugin, @Token final String token) {
+    private BukkitContext(final Plugin plugin, @Token final String token) {
         super(SimpleConfig.read(getConfigPath(plugin)), "bukkit", token);
         this.plugin = plugin;
     }
 
     @Override
     @Contract(value = " -> new", pure = true)
-    public BukkitMetrics.Factory metricsFactory() {
+    protected BukkitMetrics.Factory metricsFactory() {
         return new BukkitMetricsImpl.Factory(this);
-    }
-
-    @Override
-    public BukkitContext globalErrorTracker(final ErrorTracker errorTracker) {
-        super.globalErrorTracker(errorTracker);
-        return this;
     }
 
     private static Path getConfigPath(final Plugin plugin) {
@@ -49,5 +43,21 @@ public final class BukkitContext extends SimpleContext {
     @Override
     public String getProjectName() {
         return plugin.getName();
+    }
+
+    public static final class Factory extends FastStatsContextFactory<BukkitContext, Factory> {
+        private final Plugin plugin;
+        private final @Token String token;
+
+        public Factory(final Plugin plugin, @Token final String token) {
+            this.plugin = plugin;
+            this.token = token;
+        }
+
+        @Override
+        @Contract(value = " -> new", mutates = "io")
+        protected BukkitContext createContext() {
+            return new BukkitContext(plugin, token);
+        }
     }
 }

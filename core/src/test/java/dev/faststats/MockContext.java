@@ -5,16 +5,17 @@ import org.jspecify.annotations.Nullable;
 import java.util.UUID;
 
 public final class MockContext extends SimpleContext {
-    public MockContext() throws IllegalArgumentException {
+    private MockContext() throws IllegalArgumentException {
         this(null);
     }
 
-    public MockContext(@Nullable final ErrorTracker internalErrorTracker) throws IllegalArgumentException {
-        super(new MockConfig(UUID.randomUUID()), "core:test", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", internalErrorTracker);
+    private MockContext(@Nullable final ErrorTracker internalErrorTracker) throws IllegalArgumentException {
+        super(new MockConfig(UUID.randomUUID()), "core:test", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        if (internalErrorTracker != null) setErrorTracker(internalErrorTracker);
     }
 
     @Override
-    public Metrics.Factory metricsFactory() {
+    protected Metrics.Factory metricsFactory() {
         return new SimpleMetrics.Factory(this) {
             @Override
             public Metrics create() throws IllegalStateException {
@@ -47,6 +48,23 @@ public final class MockContext extends SimpleContext {
         @Override
         public boolean debug() {
             return true;
+        }
+    }
+
+    public static final class Factory extends FastStatsContextFactory<MockContext, Factory> {
+        private final @Nullable ErrorTracker internalErrorTracker;
+
+        public Factory() {
+            this(null);
+        }
+
+        public Factory(@Nullable final ErrorTracker internalErrorTracker) {
+            this.internalErrorTracker = internalErrorTracker;
+        }
+
+        @Override
+        protected MockContext createContext() {
+            return new MockContext(internalErrorTracker);
         }
     }
 }

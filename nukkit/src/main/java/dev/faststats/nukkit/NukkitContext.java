@@ -1,6 +1,7 @@
 package dev.faststats.nukkit;
 
 import cn.nukkit.plugin.PluginBase;
+import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -18,14 +19,14 @@ import java.nio.file.Path;
 public final class NukkitContext extends SimpleContext {
     final PluginBase plugin;
 
-    public NukkitContext(final PluginBase plugin, @Token final String token) {
+    private NukkitContext(final PluginBase plugin, @Token final String token) {
         super(SimpleConfig.read(Path.of(plugin.getServer().getPluginPath(), "faststats", "config.properties")), "nukkit", token);
         this.plugin = plugin;
     }
 
     @Override
     @Contract(value = " -> new", pure = true)
-    public Metrics.Factory metricsFactory() {
+    protected Metrics.Factory metricsFactory() {
         return new SimpleMetrics.Factory(this) {
             @Override
             public Metrics create() throws IllegalStateException {
@@ -37,5 +38,20 @@ public final class NukkitContext extends SimpleContext {
     @Override
     public String getProjectName() {
         return plugin.getName();
+    }
+
+    public static final class Factory extends FastStatsContextFactory<NukkitContext> {
+        private final PluginBase plugin;
+        private final @Token String token;
+
+        public Factory(final PluginBase plugin, @Token final String token) {
+            this.plugin = plugin;
+            this.token = token;
+        }
+
+        @Override
+        protected NukkitContext createContext() {
+            return new NukkitContext(plugin, token);
+        }
     }
 }
