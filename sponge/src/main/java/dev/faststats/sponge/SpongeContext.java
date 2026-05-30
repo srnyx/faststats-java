@@ -74,7 +74,14 @@ public final class SpongeContext extends SimpleContext {
             this.dataDirectory = dataDirectory;
         }
 
-        // todo: document
+        /**
+         * Sets the FastStats project token used by the context created from this factory.
+         *
+         * @param token the FastStats project token
+         * @return this factory
+         * @throws IllegalArgumentException if the token is invalid
+         * @since 0.24.0
+         */
         public SpongeContext.Factory token(@Token final String token) throws IllegalArgumentException {
             this.token = token;
             return this;
