@@ -19,11 +19,6 @@ final class MockMetrics extends SimpleMetrics {
     }
 
     @Override
-    public JsonObject createData() {
-        return super.createData();
-    }
-
-    @Override
     protected void appendDefaultData(final JsonObject metrics) {
     }
 }

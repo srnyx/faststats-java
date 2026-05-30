@@ -179,33 +179,38 @@ public abstract class SimpleMetrics implements Metrics {
     private static final String osVersion = System.getProperty("os.version");
     private static final int coreCount = Runtime.getRuntime().availableProcessors();
 
-    protected JsonObject createData() {
-        final var data = new JsonObject();
-        final var metrics = new JsonObject();
-
+    private void appendInternalData(final JsonObject metrics) {
         metrics.addProperty("core_count", coreCount);
         metrics.addProperty("java_vendor", javaVendor);
         metrics.addProperty("java_version", javaVersion);
         metrics.addProperty("os_arch", osArch);
         metrics.addProperty("os_name", osName);
         metrics.addProperty("os_version", osVersion);
+    }
 
-        try {
-            appendDefaultData(metrics);
-        } catch (final Throwable t) {
-            logger.error("Failed to append default data", t);
-            context.trackInternalError(t);
-        }
-
+    private void appendCustomData(final JsonObject metrics) {
         this.metrics.forEach(metric -> {
             try {
+                // todo: prevent overriding and log warning if multiple similar metric ids are used
                 metric.getData().ifPresent(element -> metrics.add(metric.getId(), element));
             } catch (final Throwable t) {
-                logger.error("Failed to build metric data: %s", t, metric.getId());
+                logger.error("Failed to append custom metric data: %s", t, metric.getId());
                 context.trackInternalError(t);
             }
         });
+    }
 
+    public final void appendData(final JsonObject metrics) {
+        appendInternalData(metrics);
+        appendDefaultData(metrics);
+        appendCustomData(metrics);
+    }
+
+    private JsonObject createData() {
+        final var data = new JsonObject();
+        final var metrics = new JsonObject();
+
+        appendData(metrics);
 
         data.addProperty("project_name", context.getProjectName());
         data.addProperty("identifier", context.getConfig().serverId().toString());

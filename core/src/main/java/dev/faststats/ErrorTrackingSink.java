@@ -38,7 +38,7 @@ final class ErrorTrackingSink {
     final Set<SimpleErrorTracker> errorTrackers = new CopyOnWriteArraySet<>();
     final Set<ScheduledFuture<?>> submissionJobs = new CopyOnWriteArraySet<>();
 
-    private @Nullable SimpleErrorTracker internalErrorTracker;
+    private volatile @Nullable SimpleErrorTracker internalErrorTracker;
     private volatile @Nullable ScheduledExecutorService submissionScheduler;
     private volatile @Nullable ScheduledFuture<?> errorSubmissionJob;
 
@@ -104,28 +104,12 @@ final class ErrorTrackingSink {
         return URI.create("https://metrics.faststats.dev/v1/error");
     }
 
-    JsonArray getData() {
-        final var data = new JsonArray();
-        if (internalErrorTracker != null) data.addAll(internalErrorTracker.getData());
-        errorTrackers.forEach(tracker -> data.addAll(tracker.getData()));
-        return data;
-    }
-
     // todo: improve logging to be less cluttered; dedupe code
     void submit() {
         if (!context.getConfig().errorTracking()) return;
 
-        final var errors = getData();
-        if (errors.isEmpty()) return;
-
-        final var data = new JsonObject();
-        context.getSdkInfo().getBuildId().ifPresent(id -> data.addProperty("buildId", id));
-        data.addProperty("identifier", context.getConfig().serverId().toString());
-        data.addProperty("project_name", context.getProjectName());
-        data.addProperty("sdk_name", context.getSdkInfo().getName());
-        data.addProperty("sdk_version", context.getSdkInfo().getVersion());
-        // data.add("context", ); // todo: add global attributes and default and custom metrics
-        data.add("errors", errors);
+        final var data = createData();
+        if (data == null) return;
 
         try (final var byteOutput = new ByteArrayOutputStream();
              final var output = new GZIPOutputStream(byteOutput)) {
@@ -171,8 +155,34 @@ final class ErrorTrackingSink {
         }
     }
 
+    private @Nullable JsonObject createData() {
+        final var internal = internalErrorTracker;
+        if (internal == null && errorTrackers.isEmpty()) return null;
+
+        final var data = new JsonObject();
+        context.getSdkInfo().getBuildId().ifPresent(id -> data.addProperty("buildId", id));
+        data.addProperty("identifier", context.getConfig().serverId().toString());
+        data.addProperty("project_name", context.getProjectName());
+        data.addProperty("sdk_name", context.getSdkInfo().getName());
+        data.addProperty("sdk_version", context.getSdkInfo().getVersion());
+
+        final var defaultContext = new JsonObject();
+        context.metrics().ifPresent(metrics -> {
+            final var simpleMetrics = (SimpleMetrics) metrics;
+            simpleMetrics.appendData(defaultContext);
+        });
+        data.add("context", defaultContext);
+
+        final var errors = new JsonArray();
+        if (internal != null) errors.addAll(internal.getData());
+        errorTrackers.forEach(tracker -> errors.addAll(tracker.getData()));
+        data.add("errors", errors);
+        return data;
+    }
+
     void clear() {
-        if (internalErrorTracker != null) internalErrorTracker.clear();
+        final var internal = internalErrorTracker;
+        if (internal != null) internal.clear();
         errorTrackers.forEach(SimpleErrorTracker::clear);
     }
 
