@@ -104,16 +104,10 @@ final class ErrorTrackingSink {
         return URI.create("https://metrics.faststats.dev/v1/error");
     }
 
-    JsonObject getData() {
-        final var data = new JsonObject();
-        final var reports = new JsonArray();
-        if (internalErrorTracker != null) reports.addAll(internalErrorTracker.getData());
-        errorTrackers.forEach(tracker -> reports.addAll(tracker.getData()));
-        context.getSdkInfo().getBuildId().ifPresent(id -> data.addProperty("buildId", id));
-        // todo: add global context
-        data.addProperty("sdk_name", context.getSdkInfo().getName());
-        data.addProperty("sdk_version", context.getSdkInfo().getVersion());
-        data.add("reports", reports);
+    JsonArray getData() {
+        final var data = new JsonArray();
+        if (internalErrorTracker != null) data.addAll(internalErrorTracker.getData());
+        errorTrackers.forEach(tracker -> data.addAll(tracker.getData()));
         return data;
     }
 
@@ -125,8 +119,12 @@ final class ErrorTrackingSink {
         if (errors.isEmpty()) return;
 
         final var data = new JsonObject();
-        data.addProperty("project_name", context.getProjectName());
+        context.getSdkInfo().getBuildId().ifPresent(id -> data.addProperty("buildId", id));
         data.addProperty("identifier", context.getConfig().serverId().toString());
+        data.addProperty("project_name", context.getProjectName());
+        data.addProperty("sdk_name", context.getSdkInfo().getName());
+        data.addProperty("sdk_version", context.getSdkInfo().getVersion());
+        // data.add("context", ); // todo: add global attributes and default and custom metrics
         data.add("errors", errors);
 
         try (final var byteOutput = new ByteArrayOutputStream();
