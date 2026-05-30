@@ -164,10 +164,10 @@ final class ErrorTrackingSink {
         startErrorSubmission();
     }
 
-    void trackInternalError(final Throwable error, final boolean handled) {
+    TrackedError trackInternalError(final Throwable error) {
         final var tracker = internalErrorTracker;
-        if (tracker == null) return;
-        tracker.trackError(error, handled);
+        if (tracker == null) return new SimpleTrackedError(error);
+        return tracker.trackError(error);
     }
 
     boolean isSubmissionSchedulerRunning() {

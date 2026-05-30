@@ -113,8 +113,8 @@ public abstract class SimpleMetrics implements Metrics {
         return submissionJob != null && !submissionJob.isCancelled();
     }
 
-    protected final void trackError(final Throwable error, final boolean handled) {
-        context.trackInternalError(error, handled);
+    protected final TrackedError trackError(final Throwable error) {
+        return context.trackInternalError(error);
     }
 
     // todo: improve logging to be less cluttered
@@ -194,7 +194,7 @@ public abstract class SimpleMetrics implements Metrics {
             appendDefaultData(metrics);
         } catch (final Throwable t) {
             logger.error("Failed to append default data", t);
-            context.trackInternalError(t, true);
+            context.trackInternalError(t);
         }
 
         this.metrics.forEach(metric -> {
@@ -202,7 +202,7 @@ public abstract class SimpleMetrics implements Metrics {
                 metric.getData().ifPresent(element -> metrics.add(metric.getId(), element));
             } catch (final Throwable t) {
                 logger.error("Failed to build metric data: %s", t, metric.getId());
-                context.trackInternalError(t, true);
+                context.trackInternalError(t);
             }
         });
 

@@ -1,7 +1,6 @@
 package dev.faststats;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.jspecify.annotations.Nullable;
 
@@ -19,8 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class SimpleErrorTracker implements ErrorTracker {
-    // todo: track unchanged exceptions and counts?
-    private final Map<JsonObject, Integer> reports = new ConcurrentHashMap<>();
+    private final Map<TrackedError, Integer> reports = new ConcurrentHashMap<>();
 
     private final Map<Class<? extends Throwable>, Set<Pattern>> ignoredTypedPatterns = new ConcurrentHashMap<>();
     private final Set<Class<? extends Throwable>> ignoredTypes = new CopyOnWriteArraySet<>();
@@ -32,30 +30,22 @@ final class SimpleErrorTracker implements ErrorTracker {
     private volatile boolean contextAttached;
 
     @Override
-    public void trackError(final String message) {
-        trackError(message, true);
+    public TrackedError trackError(final String message) {
+        return trackError(new RuntimeException(message));
     }
 
     @Override
-    public void trackError(final Throwable error) {
-        trackError(error, true);
-    }
-
-    @Override
-    public void trackError(final String message, final boolean handled) {
-        trackError(new RuntimeException(message), handled);
-    }
-
-    @Override
-    public void trackError(final Throwable error, final boolean handled) {
+    public TrackedError trackError(final Throwable error) {
+        final var trackedError = new SimpleTrackedError(error);
         try {
-            if (isIgnored(error, Collections.newSetFromMap(new IdentityHashMap<>()))) return;
-            final var compiled = ErrorHelper.compile(error, null, handled, anonymizationEntries);
-            reports.compute(compiled, (key, report) -> {
-                return report != null ? report + 1 : 1;
+            if (isIgnored(error, Collections.newSetFromMap(new IdentityHashMap<>()))) return trackedError;
+            reports.compute(trackedError, (key, reports) -> {
+                return reports != null ? reports + 1 : 1;
             });
         } catch (final NoClassDefFoundError ignored) {
+            // todo: add logging
         }
+        return trackedError;
     }
 
     private boolean isIgnored(@Nullable final Throwable error, final Set<Throwable> visited) {
@@ -100,10 +90,10 @@ final class SimpleErrorTracker implements ErrorTracker {
     @VisibleForTesting
     public JsonArray getData() {
         final var report = new JsonArray(reports.size());
-        reports.forEach((entry, count) -> {
-            final var copy = entry.deepCopy();
-            if (count > 1) copy.addProperty("count", count);
-            report.add(copy);
+        reports.forEach((error, count) -> {
+            final var compiled = ErrorHelper.compile(error, null, anonymizationEntries);
+            if (count > 1) compiled.addProperty("count", count);
+            report.add(compiled);
         });
         return report;
     }

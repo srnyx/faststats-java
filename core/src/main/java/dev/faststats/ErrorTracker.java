@@ -55,55 +55,26 @@ public sealed interface ErrorTracker permits SimpleErrorTracker {
         return new SimpleErrorTracker();
     }
 
-    // todo: return tracker object to supply additional information
-
     /**
      * Tracks a handled  error.
      *
      * @param message the error message
+     * @return a new mutable tracked error
      * @see #trackError(Throwable)
-     * @see #trackError(String, boolean)
      * @since 0.24.0
      */
     @Contract(mutates = "this")
-    void trackError(String message);
+    TrackedError trackError(String message);
 
     /**
      * Tracks a handled error.
      *
      * @param error the error
-     * @see #trackError(Throwable, boolean)
+     * @return a new mutable tracked error
      * @since 0.24.0
      */
     @Contract(mutates = "this")
-    void trackError(Throwable error);
-
-    // todo: remove handled overloads and move into the tracker object
-
-    /**
-     * Tracks an error.
-     * <p>
-     * A {@code handled=true} error is expected and properly handled.
-     *
-     * @param message the error message
-     * @param handled whether the error was handled
-     * @see #trackError(Throwable, boolean)
-     * @since 0.24.0
-     */
-    @Contract(mutates = "this")
-    void trackError(String message, boolean handled);
-
-    /**
-     * Tracks an error.
-     * <p>
-     * A {@code handled=true} error is expected and properly handled.
-     *
-     * @param error   the error
-     * @param handled whether the error was handled
-     * @since 0.24.0
-     */
-    @Contract(mutates = "this")
-    void trackError(Throwable error, boolean handled);
+    TrackedError trackError(Throwable error);
 
     /**
      * Adds an error type that will not be reported to FastStats.

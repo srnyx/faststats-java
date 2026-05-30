@@ -138,7 +138,7 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
         return errorTrackingSink;
     }
 
-    void trackInternalError(final Throwable error, final boolean handled) {
-        errorTrackingSink.trackInternalError(error, handled);
+    TrackedError trackInternalError(final Throwable error) {
+        return errorTrackingSink.trackInternalError(error);
     }
 }

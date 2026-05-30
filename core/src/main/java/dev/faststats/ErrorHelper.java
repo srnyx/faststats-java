@@ -20,17 +20,19 @@ final class ErrorHelper {
     private static final int STACK_TRACE_LENGTH = Math.min(500, Integer.getInteger("faststats.stack-trace-length", 300));
     private static final int STACK_TRACE_LIMIT = Math.min(50, Integer.getInteger("faststats.stack-trace-limit", 15));
 
+    private static final Set<String> allowedNames = Set.of("minecraft", "server", "root", "ubuntu");
     private static final List<Map.Entry<Pattern, String>> defaultAnonymizationEntries = defaultAnonymizationEntries();
 
-    public static JsonObject compile(final Throwable error, @Nullable final List<String> suppress, final boolean handled,
+    public static JsonObject compile(final TrackedError error, @Nullable final List<String> suppress,
                                      final List<Map.Entry<Pattern, String>> customPatterns) {
         final var patterns = new ArrayList<>(customPatterns);
         patterns.addAll(defaultAnonymizationEntries);
-        return compileAll(error, suppress, handled, patterns);
+        return compileAll(error, suppress, patterns);
     }
 
-    private static JsonObject compileAll(final Throwable error, @Nullable final List<String> suppress, final boolean handled,
+    private static JsonObject compileAll(final TrackedError trackedError, @Nullable final List<String> suppress,
                                          final List<Map.Entry<Pattern, String>> customPatterns) {
+        final var error = trackedError.error();
         final var report = new JsonObject();
         final var message = getAnonymizedMessage(error, customPatterns);
 
@@ -53,7 +55,11 @@ final class ErrorHelper {
         if (message != null) report.addProperty("message", message);
 
         report.add("stack", stacktrace);
-        report.addProperty("handled", handled);
+        report.addProperty("handled", trackedError.handled());
+
+        final var attributes = new JsonObject();
+        trackedError.attributes().forEachPrimitive(attributes::add);
+        if (!attributes.isEmpty()) report.add("attributes", attributes);
 
         return report;
     }
@@ -259,8 +265,6 @@ final class ErrorHelper {
                 "|(/Users/)[^/\\s]+" +                    // macOS: /Users/username
                 "|((?i)[A-Z]:\\\\Users\\\\)[^\\\\\\s]+"); // Windows: A-Z:\\Users\\username
     }
-
-    private static final Set<String> allowedNames = Set.of("minecraft", "server", "root", "ubuntu");
 
     private static Optional<Pattern> usernamePattern() {
         return Optional.ofNullable(System.getProperty("user.name"))
