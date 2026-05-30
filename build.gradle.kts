@@ -22,8 +22,8 @@ subprojects {
         plugin("java-library")
     }
 
-    val noPublish = project.name.startsWith("example") || project.name == "config"
-    if (noPublish) {
+    val example = project.name.startsWith("example")
+    if (example) {
         apply { plugin("com.gradleup.shadow") }
     } else {
         apply { plugin("maven-publish") }
@@ -96,7 +96,7 @@ subprojects {
     }
 
     afterEvaluate {
-        if (noPublish) return@afterEvaluate
+        if (example) return@afterEvaluate
         extensions.configure<PublishingExtension> {
             publications.create<MavenPublication>("maven") {
                 artifactId = project.name
