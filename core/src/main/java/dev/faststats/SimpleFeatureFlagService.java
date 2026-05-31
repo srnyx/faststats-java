@@ -216,7 +216,6 @@ final class SimpleFeatureFlagService implements FeatureFlagService {
         return ttl;
     }
 
-    @Override
     public void shutdown() {
         fetchesInProgress.values().forEach(fetch -> fetch.cancel(true));
         fetchesInProgress.clear();

@@ -11,29 +11,6 @@ import org.jetbrains.annotations.Contract;
  */
 public interface Metrics {
     /**
-     * Performs additional post-startup tasks.
-     * <p>
-     * This method may only be called when the application startup is complete.
-     * <p>
-     * <i>No-op in most implementations.</i>
-     *
-     * @apiNote Refer to your {@code Metrics} provider's documentation.
-     * @since 0.24.0
-     */
-    default void ready() {
-    }
-
-    /**
-     * Safely shuts down the metrics submission.
-     * <p>
-     * This method should be called when the application is shutting down.
-     *
-     * @since 0.24.0
-     */
-    @Contract(mutates = "this")
-    void shutdown();
-
-    /**
      * A metrics factory.
      *
      * @since 0.24.0

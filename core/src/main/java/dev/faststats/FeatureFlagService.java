@@ -102,14 +102,6 @@ public sealed interface FeatureFlagService permits SimpleFeatureFlagService {
     Duration getTTL();
 
     /**
-     * Shuts down the feature flag service.
-     *
-     * @since 0.24.0
-     */
-    @Contract(mutates = "this")
-    void shutdown();
-
-    /**
      * A feature flag service factory.
      *
      * @since 0.24.0

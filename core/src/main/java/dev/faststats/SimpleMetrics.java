@@ -231,8 +231,7 @@ public abstract class SimpleMetrics implements Metrics {
     @Contract(mutates = "param1")
     protected abstract void appendDefaultData(JsonObject metrics);
 
-    @Override
-    public void shutdown() {
+    protected void shutdown() {
         if (submissionJob != null) try {
             logger.info("Shutting down metrics submission");
             submissionJob.cancel(false);

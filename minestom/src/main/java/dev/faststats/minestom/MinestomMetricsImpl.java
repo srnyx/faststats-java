@@ -1,7 +1,6 @@
 package dev.faststats.minestom;
 
 import com.google.gson.JsonObject;
-import dev.faststats.ErrorTracker;
 import dev.faststats.SimpleMetrics;
 import dev.faststats.config.SimpleConfig;
 import dev.faststats.data.Metric;
@@ -30,20 +29,6 @@ final class MinestomMetricsImpl extends SimpleMetrics implements MinestomMetrics
         metrics.addProperty("online_mode", !(MinecraftServer.process().auth() instanceof Auth.Offline));
         metrics.addProperty("player_count", MinecraftServer.getConnectionManager().getOnlinePlayerCount());
         metrics.addProperty("server_type", "Minestom");
-    }
-
-    @Override
-    public void ready() {
-        // context.errorTrackers().forEach(this::registerExceptionHandler); // fixme
-    }
-
-    private void registerExceptionHandler(final ErrorTracker errorTracker) {
-        final var handler = MinecraftServer.getExceptionManager().getExceptionHandler();
-        MinecraftServer.getExceptionManager().setExceptionHandler(error -> {
-            handler.handleException(error);
-            if (!ErrorTracker.isSameLoader(getClass().getClassLoader(), error)) return;
-            errorTracker.trackError(error);
-        });
     }
 
     public static final class Factory extends SimpleMetrics.Factory implements MinestomMetrics.Factory {

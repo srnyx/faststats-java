@@ -104,14 +104,14 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
     }
 
     @Override
-    public final void ready() {
-        if (metrics != null) metrics.ready();
+    public void ready() {
     }
 
     @Override
     public final void shutdown() {
-        if (metrics != null) metrics.shutdown();
-        if (featureFlagService != null) featureFlagService.shutdown();
+        if (errorTrackerService instanceof final SimpleErrorTrackerService service) service.clear();
+        if (featureFlagService instanceof final SimpleFeatureFlagService service) service.shutdown();
+        if (metrics instanceof final SimpleMetrics simpleMetrics) simpleMetrics.shutdown();
     }
 
     @Override

@@ -27,6 +27,15 @@ public final class BukkitContext extends SimpleContext {
         return new BukkitMetricsImpl.Factory(this);
     }
 
+    @Override
+    public void ready() {
+        try {
+            Class.forName("com.destroystokyo.paper.event.server.ServerExceptionEvent");
+            plugin.getServer().getPluginManager().registerEvents(new PaperEventListener(plugin, this), plugin);
+        } catch (final ClassNotFoundException ignored) {
+        }
+    }
+
     private static Path getConfigPath(final Plugin plugin) {
         return getPluginsFolder(plugin).resolve("faststats").resolve("config.properties");
     }

@@ -82,15 +82,6 @@ final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
         }
     }
 
-    @Override
-    public void ready() {
-        try {
-            Class.forName("com.destroystokyo.paper.event.server.ServerExceptionEvent");
-            plugin.getServer().getPluginManager().registerEvents(new PaperEventListener(plugin, context), plugin);
-        } catch (final ClassNotFoundException ignored) {
-        }
-    }
-
     private <T> Optional<T> tryOrEmpty(final Supplier<T> supplier) {
         try {
             return Optional.of(supplier.get());

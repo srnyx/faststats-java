@@ -21,6 +21,19 @@ public final class MinestomContext extends SimpleContext {
     }
 
     @Override
+    public void ready() {
+        super.ready();
+        errorTrackerService().map(ErrorTrackerService::globalErrorTracker).ifPresent(errorTracker -> {
+            final var handler = MinecraftServer.getExceptionManager().getExceptionHandler();
+            MinecraftServer.getExceptionManager().setExceptionHandler(error -> {
+                handler.handleException(error);
+                if (!ErrorTracker.isSameLoader(getClass().getClassLoader(), error)) return;
+                errorTracker.trackError(error);
+            });
+        });
+    }
+
+    @Override
     @Contract(value = " -> new", pure = true)
     protected MinestomMetrics.Factory metricsFactory() {
         return new MinestomMetricsImpl.Factory(this);
