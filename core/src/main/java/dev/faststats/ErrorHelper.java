@@ -24,11 +24,6 @@ final class ErrorHelper {
     private static final List<Map.Entry<Pattern, String>> defaultAnonymizationEntries = defaultAnonymizationEntries();
 
     public static JsonObject compile(final TrackedError error, @Nullable final List<String> suppress,
-                                     final List<Map.Entry<Pattern, String>> customPatterns) {
-        return compile(error, suppress, customPatterns, null);
-    }
-
-    public static JsonObject compile(final TrackedError error, @Nullable final List<String> suppress,
                                      final List<Map.Entry<Pattern, String>> customPatterns,
                                      @Nullable final Attributes attributes) {
         final var patterns = new ArrayList<>(customPatterns);
