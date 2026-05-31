@@ -177,6 +177,7 @@ final class SimpleErrorTrackerService implements ErrorTrackerService {
         final var data = new JsonObject();
         context.getSdkInfo().getBuildId().ifPresent(id -> data.addProperty("buildId", id));
         data.addProperty("identifier", context.getConfig().serverId().toString());
+        data.addProperty("language", "java");
         data.addProperty("project_name", context.getProjectName());
         data.addProperty("sdk_name", context.getSdkInfo().getName());
         data.addProperty("sdk_version", context.getSdkInfo().getVersion());
