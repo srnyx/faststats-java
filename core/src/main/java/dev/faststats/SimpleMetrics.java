@@ -233,7 +233,6 @@ public abstract class SimpleMetrics implements Metrics {
 
     @Override
     public void shutdown() {
-        // context.errorTrackers().forEach(ErrorTracker::detachErrorContext); // todo: detach all error contexts on shutdown?
         if (submissionJob != null) try {
             logger.info("Shutting down metrics submission");
             submissionJob.cancel(false);
