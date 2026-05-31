@@ -22,6 +22,8 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -37,6 +39,11 @@ public abstract class SimpleMetrics implements Metrics {
             .connectTimeout(Duration.ofSeconds(3))
             .version(HttpClient.Version.HTTP_1_1)
             .build();
+    private final ScheduledExecutorService submissionScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        final var thread = new Thread(runnable, "faststats-submitter");
+        thread.setDaemon(true);
+        return thread;
+    });
     private @Nullable ScheduledFuture<?> submissionJob = null;
 
     private final @Nullable Runnable flush;
@@ -106,7 +113,12 @@ public abstract class SimpleMetrics implements Metrics {
         }
 
         logger.info("Starting metrics submission");
-        submissionJob = context.errorTrackingSink().scheduleSubmission(this::submit, initialDelay, period, unit);
+        submissionJob = submissionScheduler.scheduleAtFixedRate(
+                this::submit,
+                Math.max(0, initialDelay),
+                Math.max(1000, period),
+                unit
+        );
     }
 
     protected boolean isSubmitting() {
@@ -223,12 +235,13 @@ public abstract class SimpleMetrics implements Metrics {
         // context.errorTrackers().forEach(ErrorTracker::detachErrorContext); // todo: detach all error contexts on shutdown?
         if (submissionJob != null) try {
             logger.info("Shutting down metrics submission");
-            context.errorTrackingSink().unregisterSubmission(submissionJob);
+            submissionJob.cancel(false);
             submit();
         } catch (final Throwable t) {
             logger.error("Failed to submit metrics on shutdown", t);
         } finally {
             submissionJob = null;
+            submissionScheduler.shutdown();
         }
     }
 

@@ -10,8 +10,6 @@ import java.util.Properties;
 
 // fixme: thread safety
 public non-sealed abstract class SimpleContext implements FastStatsContext {
-    private final ErrorTrackingSink errorTrackingSink = new ErrorTrackingSink(this);
-
     private final Config config;
     private final @Token String token;
     private final SdkInfo sdkInfo;
@@ -95,7 +93,7 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
 
     @Contract(value = " -> new", pure = true)
     protected ErrorTrackerService.Factory errorTrackerServiceFactory() {
-        return new SimpleErrorTrackerService.Factory(errorTrackingSink);
+        return new SimpleErrorTrackerService.Factory(this);
     }
 
     final void setMetrics(final Metrics metrics) {
@@ -132,9 +130,5 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
     @Contract(pure = true)
     public SdkInfo getSdkInfo() {
         return sdkInfo;
-    }
-
-    ErrorTrackingSink errorTrackingSink() {
-        return errorTrackingSink;
     }
 }
