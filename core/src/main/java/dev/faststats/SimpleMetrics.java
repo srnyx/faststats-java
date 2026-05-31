@@ -199,8 +199,9 @@ public abstract class SimpleMetrics implements Metrics {
     private void appendCustomData(final JsonObject metrics) {
         this.metrics.forEach(metric -> {
             try {
-                // todo: prevent overriding and log warning if multiple similar metric ids are used
-                metric.getData().ifPresent(element -> metrics.add(metric.getId(), element));
+                if (metrics.has(metric.getId()))
+                    logger.warn("Skipped duplicated metrics entry: %s", metric.getId());
+                else metric.getData().ifPresent(element -> metrics.add(metric.getId(), element));
             } catch (final Throwable t) {
                 logger.error("Failed to append custom metric data: %s", t, metric.getId());
                 context.errorTrackerService().ifPresent(service -> service.globalErrorTracker().trackError(t));
