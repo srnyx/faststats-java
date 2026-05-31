@@ -2,9 +2,9 @@ package dev.faststats.example;
 
 import dev.faststats.Attributes;
 import dev.faststats.FastStatsContext;
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.FeatureFlag;
 import dev.faststats.FeatureFlagService;
+import dev.faststats.SimpleContext;
 
 import java.time.Duration;
 
@@ -68,7 +68,7 @@ public final class FeatureFlagExample {
         });
     }
 
-    private static FastStatsContextFactory<?, ?> getContextFactory() {
+    private static SimpleContext.Factory<?, ?> getContextFactory() {
         return null;
     }
 }

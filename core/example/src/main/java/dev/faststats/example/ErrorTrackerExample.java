@@ -2,7 +2,7 @@ package dev.faststats.example;
 
 import dev.faststats.ErrorTracker;
 import dev.faststats.FastStatsContext;
-import dev.faststats.FastStatsContextFactory;
+import dev.faststats.SimpleContext;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.AccessDeniedException;
@@ -38,7 +38,7 @@ public final class ErrorTrackerExample {
         }
     }
 
-    private static FastStatsContextFactory<?, ?> getContextFactory() {
+    private static SimpleContext.Factory<?, ?> getContextFactory() {
         return null;
     }
 }
