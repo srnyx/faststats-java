@@ -20,6 +20,15 @@ public interface Config {
     UUID serverId();
 
     /**
+     * Whether all FastStats features are enabled.
+     *
+     * @return {@code true} if FastStats features are enabled, {@code false} otherwise
+     * @since 0.24.0
+     */
+    @Contract(pure = true)
+    boolean enabled();
+
+    /**
      * Whether metrics submission is enabled.
      * <p>
      * <b>Bypassing this setting may get your project banned from FastStats.</b><br>
@@ -29,7 +38,7 @@ public interface Config {
      * @since 0.24.0
      */
     @Contract(pure = true)
-    boolean enabled();
+    boolean submitMetrics();
 
     /**
      * Whether error tracking is enabled across all metrics instances.

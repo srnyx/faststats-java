@@ -29,6 +29,11 @@ public final class MockContext extends SimpleContext {
         }
 
         @Override
+        public boolean submitMetrics() {
+            return true;
+        }
+
+        @Override
         public boolean errorTracking() {
             return true;
         }

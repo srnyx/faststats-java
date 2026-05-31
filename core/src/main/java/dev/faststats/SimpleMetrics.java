@@ -102,7 +102,7 @@ public abstract class SimpleMetrics implements Metrics {
 
         final var enabled = Boolean.parseBoolean(System.getProperty("faststats.enabled", "true"));
 
-        if (!context.getConfig().enabled() || !enabled) {
+        if (!context.getConfig().submitMetrics() || !enabled) {
             logger.warn("Metrics disabled, not starting submission");
             return;
         }

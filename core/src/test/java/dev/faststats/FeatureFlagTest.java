@@ -202,6 +202,11 @@ public final class FeatureFlagTest {
         }
 
         @Override
+        public boolean submitMetrics() {
+            return true;
+        }
+
+        @Override
         public boolean errorTracking() {
             return true;
         }
