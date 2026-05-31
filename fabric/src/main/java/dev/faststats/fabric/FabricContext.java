@@ -22,6 +22,7 @@ public final class FabricContext extends SimpleContext {
         this.mod = FabricLoader.getInstance().getModContainer(modId).orElseThrow(() -> {
             return new IllegalArgumentException("Mod not found: " + modId);
         });
+        initializeServices(factory);
     }
 
     @Override

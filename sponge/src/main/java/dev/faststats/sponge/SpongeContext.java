@@ -27,6 +27,7 @@ public final class SpongeContext extends SimpleContext {
     ) {
         super(factory, SpongeConfig.read(plugin, dataDirectory.resolve("faststats").resolve("config.properties")), "sponge", token);
         this.plugin = plugin;
+        initializeServices(factory);
     }
 
     @Override

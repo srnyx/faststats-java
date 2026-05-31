@@ -21,6 +21,7 @@ public final class NukkitContext extends SimpleContext {
     private NukkitContext(final Factory factory, final PluginBase plugin, @Token final String token) {
         super(factory, SimpleConfig.read(Path.of(plugin.getServer().getPluginPath(), "faststats", "config.properties")), "nukkit", token);
         this.plugin = plugin;
+        initializeServices(factory);
     }
 
     @Override

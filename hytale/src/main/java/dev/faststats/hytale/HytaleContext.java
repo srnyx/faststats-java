@@ -19,6 +19,7 @@ public final class HytaleContext extends SimpleContext {
     private HytaleContext(final Factory factory, final JavaPlugin plugin, @Token final String token) {
         super(factory, SimpleConfig.read(plugin.getDataDirectory().toAbsolutePath().getParent().resolve("faststats").resolve("config.properties")), "hytale", token);
         this.pluginName = plugin.getName();
+        initializeServices(factory);
     }
 
     @Override

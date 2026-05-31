@@ -18,6 +18,7 @@ import java.nio.file.Path;
 public final class MinestomContext extends SimpleContext {
     MinestomContext(final Factory factory, @Token final String token) {
         super(factory, SimpleConfig.read(Path.of("faststats", "config.properties")), "minestom", token);
+        initializeServices(factory);
     }
 
     @Override

@@ -5,6 +5,7 @@ import java.util.UUID;
 public final class MockContext extends SimpleContext {
     private MockContext(final Factory factory) throws IllegalArgumentException {
         super(factory, new MockConfig(UUID.randomUUID()), "test", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        initializeServices(factory);
     }
 
     @Override

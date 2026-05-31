@@ -19,6 +19,7 @@ public final class BungeeContext extends SimpleContext {
     private BungeeContext(final Factory factory, final Plugin plugin, @Token final String token) {
         super(factory, SimpleConfig.read(plugin.getProxy().getPluginsFolder().toPath().resolve("faststats").resolve("config.properties")), "bungeecord", token);
         this.plugin = plugin;
+        initializeServices(factory);
     }
 
     @Override

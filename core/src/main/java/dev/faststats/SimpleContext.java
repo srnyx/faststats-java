@@ -3,6 +3,7 @@ package dev.faststats;
 import dev.faststats.internal.Logger;
 import dev.faststats.internal.LoggerFactory;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
@@ -19,9 +20,9 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
     private final @Token String token;
     private final SdkInfo sdkInfo;
 
-    private final @Nullable Metrics metrics;
-    private final @Nullable FeatureFlagService featureFlagService;
-    private final @Nullable ErrorTrackerService errorTrackerService;
+    private @Nullable Metrics metrics;
+    private @Nullable FeatureFlagService featureFlagService;
+    private @Nullable ErrorTrackerService errorTrackerService;
 
     /**
      * Creates a new context that stores the shared configuration and token for all FastStats services.
@@ -42,7 +43,10 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
         this.sdkInfo = constructSdkInfo(name);
         this.config = config;
         this.token = token;
+    }
 
+    @MustBeInvokedByOverriders
+    protected final void initializeServices(final Factory<?, ?> factory) throws IllegalStateException {
         this.metrics = factory.metrics != null ? factory.metrics.apply(metricsFactory()) : null;
         this.errorTrackerService = factory.errorTracker != null ? new SimpleErrorTrackerService(this, factory.errorTracker) : null;
         this.featureFlagService = factory.featureFlagService != null ? factory.featureFlagService.apply(new SimpleFeatureFlagService.Factory(config, token)) : null;

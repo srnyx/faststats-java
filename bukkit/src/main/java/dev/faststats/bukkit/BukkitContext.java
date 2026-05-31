@@ -19,6 +19,7 @@ public final class BukkitContext extends SimpleContext {
     private BukkitContext(final Factory factory, final Plugin plugin, @Token final String token) {
         super(factory, SimpleConfig.read(getConfigPath(plugin)), "bukkit", token);
         this.plugin = plugin;
+        initializeServices(factory);
     }
 
     @Override

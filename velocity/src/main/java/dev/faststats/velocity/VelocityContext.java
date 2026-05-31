@@ -32,6 +32,7 @@ public final class VelocityContext extends SimpleContext {
         super(factory, SimpleConfig.read(dataDirectory.resolveSibling("faststats").resolve("config.properties")), "velocity", token);
         this.plugin = plugin;
         this.server = server;
+        initializeServices(factory);
     }
 
     @Override
