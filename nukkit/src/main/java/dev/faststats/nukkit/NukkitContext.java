@@ -1,7 +1,6 @@
 package dev.faststats.nukkit;
 
 import cn.nukkit.plugin.PluginBase;
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -40,7 +39,7 @@ public final class NukkitContext extends SimpleContext {
         return plugin.getName();
     }
 
-    public static final class Factory extends FastStatsContextFactory<NukkitContext, Factory> {
+    public static final class Factory extends SimpleContext.Factory<NukkitContext, Factory> {
         private final PluginBase plugin;
         private final @Token String token;
 

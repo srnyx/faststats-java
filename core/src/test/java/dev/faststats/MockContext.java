@@ -44,7 +44,7 @@ public final class MockContext extends SimpleContext {
         }
     }
 
-    public static final class Factory extends FastStatsContextFactory<MockContext, Factory> {
+    public static final class Factory extends SimpleContext.Factory<MockContext, Factory> {
         @Override
         protected MockContext createContext() {
             return new MockContext();

@@ -1,7 +1,6 @@
 package dev.faststats.hytale;
 
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -39,7 +38,7 @@ public final class HytaleContext extends SimpleContext {
         return pluginName;
     }
 
-    public static final class Factory extends FastStatsContextFactory<HytaleContext, Factory> {
+    public static final class Factory extends SimpleContext.Factory<HytaleContext, Factory> {
         private final JavaPlugin plugin;
         private final @Token String token;
 

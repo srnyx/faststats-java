@@ -1,7 +1,6 @@
 package dev.faststats.sponge;
 
 import com.google.inject.Inject;
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -51,7 +50,7 @@ public final class SpongeContext extends SimpleContext {
      *
      * @since 0.24.0
      */
-    public static class Factory extends FastStatsContextFactory<SpongeContext, Factory> {
+    public static class Factory extends SimpleContext.Factory<SpongeContext, Factory> {
         private final PluginContainer plugin;
         private final Path dataDirectory;
         private @Token

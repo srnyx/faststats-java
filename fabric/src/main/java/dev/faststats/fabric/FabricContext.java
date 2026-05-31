@@ -1,6 +1,5 @@
 package dev.faststats.fabric;
 
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -45,7 +44,7 @@ public final class FabricContext extends SimpleContext {
         return mod.getMetadata().getId();
     }
 
-    public static final class Factory extends FastStatsContextFactory<FabricContext, Factory> {
+    public static final class Factory extends SimpleContext.Factory<FabricContext, Factory> {
         private final String modId;
         private final @Token String token;
 

@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -56,7 +55,7 @@ public final class VelocityContext extends SimpleContext {
      *
      * @since 0.24.0
      */
-    public static class Factory extends FastStatsContextFactory<VelocityContext, Factory> {
+    public static class Factory extends SimpleContext.Factory<VelocityContext, Factory> {
         private final PluginContainer plugin;
         private final ProxyServer server;
         private final Path dataDirectory;

@@ -1,6 +1,5 @@
 package dev.faststats.bukkit;
 
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.SimpleContext;
 import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
@@ -45,7 +44,7 @@ public final class BukkitContext extends SimpleContext {
         return plugin.getName();
     }
 
-    public static final class Factory extends FastStatsContextFactory<BukkitContext, Factory> {
+    public static final class Factory extends SimpleContext.Factory<BukkitContext, Factory> {
         private final Plugin plugin;
         private final @Token String token;
 

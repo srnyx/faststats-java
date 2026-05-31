@@ -1,6 +1,5 @@
 package dev.faststats.minestom;
 
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.SimpleContext;
 import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
@@ -30,7 +29,7 @@ public final class MinestomContext extends SimpleContext {
         return MinecraftServer.getBrandName();
     }
 
-    public static final class Factory extends FastStatsContextFactory<MinestomContext, Factory> {
+    public static final class Factory extends SimpleContext.Factory<MinestomContext, Factory> {
         private final @Token String token;
 
         public Factory(@Token final String token) {

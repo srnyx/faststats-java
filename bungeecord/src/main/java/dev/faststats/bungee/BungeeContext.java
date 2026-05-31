@@ -1,6 +1,5 @@
 package dev.faststats.bungee;
 
-import dev.faststats.FastStatsContextFactory;
 import dev.faststats.Metrics;
 import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
@@ -38,7 +37,7 @@ public final class BungeeContext extends SimpleContext {
         return plugin.getDescription().getName();
     }
 
-    public static final class Factory extends FastStatsContextFactory<BungeeContext, Factory> {
+    public static final class Factory extends SimpleContext.Factory<BungeeContext, Factory> {
         private final Plugin plugin;
         private final @Token String token;
 
