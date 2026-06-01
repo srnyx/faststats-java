@@ -42,9 +42,7 @@ final class SimpleErrorTrackerService implements ErrorTrackerService {
     private volatile @Nullable ScheduledExecutorService submissionScheduler;
     private volatile @Nullable ScheduledFuture<?> errorSubmissionJob;
 
-    private static final Object DISPATCHER_LOCK = new Object();
     private static final Set<SimpleErrorTracker> DISPATCHER_TRACKERS = new CopyOnWriteArraySet<>();
-    private static final ThreadLocal<Boolean> DISPATCHING = ThreadLocal.withInitial(() -> false);
     private static Thread.@Nullable UncaughtExceptionHandler originalHandler;
 
     SimpleErrorTrackerService(final SimpleContext context, final ErrorTracker globalErrorTracker) {
@@ -65,41 +63,29 @@ final class SimpleErrorTrackerService implements ErrorTrackerService {
         return this;
     }
 
-    // fixme: hacky shit; it only has to compile and pass tests for now
-    static void attachErrorTracker(final SimpleErrorTracker tracker) {
-        synchronized (DISPATCHER_LOCK) {
-            if (DISPATCHER_TRACKERS.isEmpty()) {
-                originalHandler = Thread.getDefaultUncaughtExceptionHandler();
-                Thread.setDefaultUncaughtExceptionHandler(SimpleErrorTrackerService::handleUncaughtException);
-            }
-            DISPATCHER_TRACKERS.add(tracker);
+    static synchronized void attachErrorTracker(final SimpleErrorTracker tracker) {
+        if (DISPATCHER_TRACKERS.isEmpty()) {
+            originalHandler = Thread.getDefaultUncaughtExceptionHandler();
+            Thread.setDefaultUncaughtExceptionHandler(SimpleErrorTrackerService::handleUncaughtException);
+        }
+        DISPATCHER_TRACKERS.add(tracker);
+    }
+
+    static synchronized void detachErrorTracker(final SimpleErrorTracker tracker) {
+        DISPATCHER_TRACKERS.remove(tracker);
+        if (DISPATCHER_TRACKERS.isEmpty()) {
+            Thread.setDefaultUncaughtExceptionHandler(originalHandler);
+            originalHandler = null;
         }
     }
 
-    // fixme: hacky shit; it only has to compile and pass tests for now
-    static void detachErrorTracker(final SimpleErrorTracker tracker) {
-        synchronized (DISPATCHER_LOCK) {
-            DISPATCHER_TRACKERS.remove(tracker);
-            if (DISPATCHER_TRACKERS.isEmpty()) {
-                Thread.setDefaultUncaughtExceptionHandler(originalHandler);
-                originalHandler = null;
-            }
-        }
-    }
-
-    // fixme: hacky shit; it only has to compile and pass tests for now
     private static void handleUncaughtException(final Thread thread, final Throwable error) {
-        if (!DISPATCHING.get()) {
-            DISPATCHING.set(true);
+        for (final var tracker : DISPATCHER_TRACKERS) {
             try {
-                for (final var tracker : DISPATCHER_TRACKERS) {
-                    final var loader = tracker.attachedLoader();
-                    if (loader != null && !ErrorHelper.isSameLoader(loader, error)) continue;
-                    tracker.trackError(error).handled(false);
-                    tracker.getContextErrorHandler().ifPresent(handler -> handler.accept(loader, error));
-                }
-            } finally {
-                DISPATCHING.set(false);
+                final var loader = tracker.attachedLoader();
+                if (loader != null && !ErrorHelper.isSameLoader(loader, error)) continue;
+                tracker.trackError(error).handled(false);
+                tracker.getContextErrorHandler().ifPresent(handler -> handler.accept(loader, error));
             }
         }
 
