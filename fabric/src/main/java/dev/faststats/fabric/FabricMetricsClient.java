@@ -3,7 +3,6 @@ package dev.faststats.fabric;
 import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import org.jspecify.annotations.Nullable;
 
@@ -18,7 +17,6 @@ final class FabricMetricsClient extends FabricMetrics {
     @Override
     protected void appendDefaultData(final JsonObject metrics) {
         assert client != null : "Client not initialized";
-        metrics.addProperty("minecraft_version", SharedConstants.getCurrentVersion().name()); // todo: doublecheck
         metrics.addProperty("online_mode", client.getUser().getXuid().isPresent() && !client.isOfflineDeveloperMode()); // todo: doublecheck
         metrics.addProperty("player_count", getPlayerCount());
         appendFabricData(metrics, "Fabric Client");

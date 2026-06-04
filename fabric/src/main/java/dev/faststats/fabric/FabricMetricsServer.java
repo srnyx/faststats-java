@@ -17,7 +17,6 @@ final class FabricMetricsServer extends FabricMetrics {
     @Override
     protected void appendDefaultData(final JsonObject metrics) {
         assert server != null : "Server not initialized";
-        metrics.addProperty("minecraft_version", server.getServerVersion());
         metrics.addProperty("online_mode", server.usesAuthentication());
         metrics.addProperty("player_count", server.getPlayerCount());
         appendFabricData(metrics, "Fabric");
