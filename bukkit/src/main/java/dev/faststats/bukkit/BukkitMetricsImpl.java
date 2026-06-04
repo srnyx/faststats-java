@@ -5,8 +5,6 @@ import dev.faststats.SimpleMetrics;
 import dev.faststats.config.SimpleConfig;
 import dev.faststats.data.Metric;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.Contract;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -18,8 +16,6 @@ final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
     private final String minecraftVersion;
     private final String serverType;
 
-    @Async.Schedule
-    @Contract(mutates = "io")
     @SuppressWarnings({"deprecation", "Convert2MethodRef"})
     private BukkitMetricsImpl(final Factory factory, final Plugin plugin) throws IllegalStateException {
         super(factory);
@@ -33,8 +29,6 @@ final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
                 .or(() -> tryOrEmpty(() -> server.getBukkitVersion().split("-", 2)[0]))
                 .orElseGet(() -> server.getVersion().split("\\(MC: |\\)", 3)[1]);
         this.serverType = server.getName();
-
-        startSubmitting();
     }
 
     private boolean checkOnlineMode() {

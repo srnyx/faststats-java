@@ -11,12 +11,9 @@ import org.spongepowered.plugin.PluginContainer;
 final class SpongeMetricsImpl extends SimpleMetrics {
     private final PluginContainer plugin;
 
-    @Async.Schedule
-    @Contract(mutates = "io")
     SpongeMetricsImpl(final Factory factory) throws IllegalStateException {
         super(factory);
         this.plugin = ((SpongeContext) this.context).plugin;
-        startSubmitting();
     }
 
     @Override

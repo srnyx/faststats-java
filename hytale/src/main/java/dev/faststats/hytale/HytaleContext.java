@@ -54,6 +54,12 @@ public final class HytaleContext extends SimpleContext {
     }
 
     @Override
+    public void ready() {
+        super.ready();
+        metrics().map(SimpleMetrics.class::cast).ifPresent(SimpleMetrics::startSubmitting);
+    }
+
+    @Override
     public void shutdown() {
         super.shutdown();
         registrations.forEach(TaskRegistration::unregister);

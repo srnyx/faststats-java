@@ -38,7 +38,7 @@ public class ExamplePlugin {
 
                         .create())
                 .create();
-        context.ready(); // register additional error handlers
+        context.ready(); // start metrics submission
     }
 
     @Listener

@@ -5,23 +5,14 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
-import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
-final class FabricMetricsClientImpl extends FabricMetricsImpl {
+final class FabricMetricsClient extends FabricMetrics {
     private @Nullable Minecraft client;
 
-    @Async.Schedule
-    @Contract(mutates = "io")
-    FabricMetricsClientImpl(final Factory factory, final ModContainer mod) throws IllegalStateException {
+    public FabricMetricsClient(final Factory factory, final ModContainer mod) throws IllegalStateException {
         super(factory, mod);
-
-        ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
-            this.client = client;
-            startSubmitting();
-        });
-        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> shutdown());
+        ClientLifecycleEvents.CLIENT_STARTED.register(client -> this.client = client);
     }
 
     @Override

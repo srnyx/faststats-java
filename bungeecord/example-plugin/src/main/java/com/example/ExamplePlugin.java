@@ -27,6 +27,11 @@ public class ExamplePlugin extends Plugin {
             .create();
 
     @Override
+    public void onEnable() {
+        context.ready(); // start metrics submission
+    }
+
+    @Override
     public void onDisable() {
         context.shutdown(); // safely shut down configured services
     }

@@ -6,16 +6,10 @@ import com.hypixel.hytale.server.core.auth.ServerAuthManager;
 import com.hypixel.hytale.server.core.universe.Universe;
 import dev.faststats.SimpleMetrics;
 import dev.faststats.config.SimpleConfig;
-import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.Contract;
 
 final class HytaleMetricsImpl extends SimpleMetrics {
-    @Async.Schedule
-    @Contract(mutates = "io")
     HytaleMetricsImpl(final Factory factory) throws IllegalStateException {
         super(factory);
-
-        startSubmitting();
     }
 
     @Override

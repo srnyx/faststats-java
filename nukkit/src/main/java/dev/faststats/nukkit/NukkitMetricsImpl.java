@@ -5,8 +5,6 @@ import cn.nukkit.plugin.PluginBase;
 import com.google.gson.JsonObject;
 import dev.faststats.SimpleMetrics;
 import dev.faststats.config.SimpleConfig;
-import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.Contract;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -15,15 +13,11 @@ final class NukkitMetricsImpl extends SimpleMetrics {
     private final Server server;
     private final PluginBase plugin;
 
-    @Async.Schedule
-    @Contract(mutates = "io")
     public NukkitMetricsImpl(final Factory factory, final PluginBase plugin) throws IllegalStateException {
         super(factory);
 
         this.server = plugin.getServer();
         this.plugin = plugin;
-
-        startSubmitting();
     }
 
     @Override

@@ -40,7 +40,7 @@ public class ExamplePlugin {
 
     @Subscribe
     public void onProxyInitialize(final ProxyInitializeEvent event) {
-        context.ready(); // register additional error handlers
+        context.ready(); // start metrics submission
     }
 
     @Subscribe

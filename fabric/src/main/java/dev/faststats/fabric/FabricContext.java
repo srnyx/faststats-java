@@ -46,8 +46,8 @@ public final class FabricContext extends SimpleContext {
             public Metrics create() throws IllegalStateException {
                 final var mod = ((FabricContext) context).mod;
                 return switch (FabricLoader.getInstance().getEnvironmentType()) {
-                    case CLIENT -> new FabricMetricsClientImpl(this, mod);
-                    case SERVER -> new FabricMetricsServerImpl(this, mod);
+                    case CLIENT -> new FabricMetricsClient(this, mod);
+                    case SERVER -> new FabricMetricsServer(this, mod);
                 };
             }
         };
@@ -61,6 +61,12 @@ public final class FabricContext extends SimpleContext {
     @Override
     public void scheduleAtFixedRate(final Runnable task, final long initialDelay, final long period, final TimeUnit unit) {
         tasks.add(executor.scheduleAtFixedRate(task, initialDelay, period, unit));
+    }
+
+    @Override
+    public void ready() {
+        super.ready();
+        metrics().map(SimpleMetrics.class::cast).ifPresent(SimpleMetrics::startSubmitting);
     }
 
     @Override

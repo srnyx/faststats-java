@@ -54,6 +54,12 @@ public final class NukkitContext extends SimpleContext {
     }
 
     @Override
+    public void ready() {
+        super.ready();
+        metrics().map(SimpleMetrics.class::cast).ifPresent(SimpleMetrics::startSubmitting);
+    }
+
+    @Override
     public void shutdown() {
         super.shutdown();
         tasks.forEach(TaskHandler::cancel);

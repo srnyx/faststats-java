@@ -5,22 +5,16 @@ import dev.faststats.SimpleMetrics;
 import dev.faststats.config.SimpleConfig;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
-import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.Contract;
 
 final class BungeeMetricsImpl extends SimpleMetrics {
     private final ProxyServer server;
     private final Plugin plugin;
 
-    @Async.Schedule
-    @Contract(mutates = "io")
     BungeeMetricsImpl(final Factory factory, final Plugin plugin) throws IllegalStateException {
         super(factory);
 
         this.server = plugin.getProxy();
         this.plugin = plugin;
-
-        startSubmitting();
     }
 
     @Override

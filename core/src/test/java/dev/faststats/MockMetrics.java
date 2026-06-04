@@ -12,10 +12,6 @@ final class MockMetrics extends SimpleMetrics {
         return true;
     }
 
-    void startTestSubmitting() {
-        startSubmitting();
-    }
-
     @Override
     protected void appendDefaultData(final JsonObject metrics) {
     }

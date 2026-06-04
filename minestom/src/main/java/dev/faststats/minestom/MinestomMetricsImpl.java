@@ -6,16 +6,10 @@ import dev.faststats.config.SimpleConfig;
 import dev.faststats.data.Metric;
 import net.minestom.server.Auth;
 import net.minestom.server.MinecraftServer;
-import org.jetbrains.annotations.Async;
-import org.jetbrains.annotations.Contract;
 
 final class MinestomMetricsImpl extends SimpleMetrics implements MinestomMetrics {
-    @Async.Schedule
-    @Contract(mutates = "io")
     private MinestomMetricsImpl(final Factory factory) throws IllegalStateException {
         super(factory);
-
-        startSubmitting();
     }
 
     @Override

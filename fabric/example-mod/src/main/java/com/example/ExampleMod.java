@@ -31,7 +31,7 @@ public class ExampleMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        context.ready(); // register additional error handlers
+        context.ready(); // start metrics submission
     }
 
     public void startGame() {

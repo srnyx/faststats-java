@@ -28,7 +28,7 @@ public final class ExamplePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        context.ready(); // register additional error handlers
+        context.ready(); // register additional error handlers and start metrics submission
     }
 
     @Override

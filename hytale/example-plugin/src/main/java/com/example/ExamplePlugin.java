@@ -29,7 +29,7 @@ public class ExamplePlugin extends JavaPlugin {
 
     public ExamplePlugin(final JavaPluginInit init) {
         super(init);
-        context.ready(); // register additional error handlers
+        context.ready(); // start metrics submission
     }
 
     @Override

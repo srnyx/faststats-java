@@ -44,7 +44,7 @@ public abstract class SimpleMetrics extends SubmissionService implements Metrics
 
     @Async.Schedule
     @MustBeInvokedByOverriders
-    protected void startSubmitting() {
+    public void startSubmitting() {
         startSubmitting(getInitialDelay(), getPeriod(), TimeUnit.MILLISECONDS);
     }
 
