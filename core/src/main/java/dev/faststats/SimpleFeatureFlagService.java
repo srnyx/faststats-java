@@ -79,14 +79,14 @@ final class SimpleFeatureFlagService extends SubmissionService implements Featur
     private JsonObject createRequestBody(final SimpleFeatureFlag<?> flag) {
         final var requestBody = new JsonObject();
         final var attributes = new JsonObject();
-        
+
         requestBody.addProperty("identifier", context.getConfig().serverId().toString());
         requestBody.addProperty("key", flag.getId());
-        
+
         this.attributes.forEachPrimitive(attributes::add);
         if (flag.attributes() != null) flag.attributes().forEachPrimitive(attributes::add);
         if (!attributes.isEmpty()) requestBody.add("attributes", attributes);
-        
+
         return requestBody;
     }
 

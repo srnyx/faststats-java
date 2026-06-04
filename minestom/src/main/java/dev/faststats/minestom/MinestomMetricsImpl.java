@@ -2,7 +2,6 @@ package dev.faststats.minestom;
 
 import com.google.gson.JsonObject;
 import dev.faststats.SimpleMetrics;
-import dev.faststats.config.SimpleConfig;
 import dev.faststats.data.Metric;
 import net.minestom.server.Auth;
 import net.minestom.server.MinecraftServer;

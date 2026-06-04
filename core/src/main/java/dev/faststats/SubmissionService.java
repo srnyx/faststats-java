@@ -34,7 +34,7 @@ abstract class SubmissionService {
     }
 
     protected abstract String serverType();
-    
+
     protected URI getServerUrl(final String propertyName, final String defaultUrl) {
         final var property = System.getProperty(propertyName);
         if (property != null) try {
