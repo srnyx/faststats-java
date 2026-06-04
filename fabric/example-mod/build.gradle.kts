@@ -11,6 +11,7 @@ dependencies {
 
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(project(":fabric").sourceSets["main"].output)
+    from(project(":config").sourceSets["main"].output)
     from(project(":core").sourceSets["main"].output)
+    from(project(":fabric").sourceSets["main"].output)
 }
