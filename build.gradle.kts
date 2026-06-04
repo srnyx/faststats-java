@@ -25,7 +25,9 @@ subprojects {
 
     val example = project.name.startsWith("example")
     if (example) {
-        apply { plugin("com.gradleup.shadow") }
+        if (project.path != ":fabric:example-mod") {
+            apply { plugin("com.gradleup.shadow") }
+        }
     } else {
         apply { plugin("maven-publish") }
     }
