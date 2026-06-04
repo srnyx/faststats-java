@@ -41,6 +41,11 @@ public final class NukkitContext extends SimpleContext {
     }
 
     @Override
+    protected boolean preSubmissionStart() {
+        return ((SimpleConfig) getConfig()).preSubmissionStart();
+    }
+
+    @Override
     public String getProjectName() {
         return plugin.getName();
     }

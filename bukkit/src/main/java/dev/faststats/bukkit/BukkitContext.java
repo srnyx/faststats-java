@@ -57,6 +57,11 @@ public final class BukkitContext extends SimpleContext {
     }
 
     @Override
+    protected boolean preSubmissionStart() {
+        return ((SimpleConfig) getConfig()).preSubmissionStart();
+    }
+
+    @Override
     public String getProjectName() {
         return plugin.getName();
     }

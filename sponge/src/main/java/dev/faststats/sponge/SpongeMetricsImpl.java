@@ -15,11 +15,6 @@ final class SpongeMetricsImpl extends SimpleMetrics {
     }
 
     @Override
-    protected boolean preSubmissionStart() {
-        return ((SpongeConfig) context.getConfig()).preSubmissionStart();
-    }
-
-    @Override
     protected void appendDefaultData(final JsonObject metrics) {
         final var implementation = Sponge.platform().container(Platform.Component.IMPLEMENTATION);
         metrics.addProperty("minecraft_version", Sponge.platform().minecraftVersion().name());

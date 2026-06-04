@@ -49,6 +49,11 @@ public final class SpongeContext extends SimpleContext {
     }
 
     @Override
+    protected boolean preSubmissionStart() {
+        return ((SpongeConfig) getConfig()).preSubmissionStart();
+    }
+
+    @Override
     public String getProjectName() {
         return plugin.metadata().id();
     }

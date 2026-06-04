@@ -85,6 +85,8 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
         }
     }
 
+    protected abstract boolean preSubmissionStart();
+
     @Contract(pure = true)
     public abstract String getProjectName();
 

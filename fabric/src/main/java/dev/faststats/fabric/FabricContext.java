@@ -54,6 +54,11 @@ public final class FabricContext extends SimpleContext {
     }
 
     @Override
+    protected boolean preSubmissionStart() {
+        return ((SimpleConfig) getConfig()).preSubmissionStart();
+    }
+
+    @Override
     public String getProjectName() {
         return mod.getMetadata().getId();
     }

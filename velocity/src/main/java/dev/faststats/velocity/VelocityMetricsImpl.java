@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import dev.faststats.SimpleMetrics;
-import dev.faststats.config.SimpleConfig;
 
 final class VelocityMetricsImpl extends SimpleMetrics {
     private final ProxyServer server;
@@ -16,11 +15,6 @@ final class VelocityMetricsImpl extends SimpleMetrics {
         final var context = (VelocityContext) this.context;
         this.server = context.server;
         this.plugin = context.plugin;
-    }
-
-    @Override
-    protected boolean preSubmissionStart() {
-        return ((SimpleConfig) context.getConfig()).preSubmissionStart();
     }
 
     @Override

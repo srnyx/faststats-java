@@ -40,6 +40,11 @@ public final class BungeeContext extends SimpleContext {
     }
 
     @Override
+    protected boolean preSubmissionStart() {
+        return ((SimpleConfig) getConfig()).preSubmissionStart();
+    }
+
+    @Override
     public String getProjectName() {
         return plugin.getDescription().getName();
     }

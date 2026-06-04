@@ -13,11 +13,6 @@ final class MinestomMetricsImpl extends SimpleMetrics implements MinestomMetrics
     }
 
     @Override
-    protected boolean preSubmissionStart() {
-        return ((SimpleConfig) context.getConfig()).preSubmissionStart();
-    }
-
-    @Override
     protected void appendDefaultData(final JsonObject metrics) {
         metrics.addProperty("minecraft_version", MinecraftServer.VERSION_NAME);
         metrics.addProperty("online_mode", !(MinecraftServer.process().auth() instanceof Auth.Offline));

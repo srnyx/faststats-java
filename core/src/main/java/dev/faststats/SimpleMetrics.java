@@ -48,10 +48,8 @@ public abstract class SimpleMetrics extends SubmissionService implements Metrics
         startSubmitting(getInitialDelay(), getPeriod(), TimeUnit.MILLISECONDS);
     }
 
-    protected abstract boolean preSubmissionStart();
-
     private void startSubmitting(final long initialDelay, final long period, final TimeUnit unit) {
-        if (!preSubmissionStart()) return;
+        if (!context.preSubmissionStart()) return;
 
         final var enabled = Boolean.parseBoolean(System.getProperty("faststats.enabled", "true"));
 

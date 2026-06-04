@@ -50,6 +50,11 @@ public final class MinestomContext extends SimpleContext {
     }
 
     @Override
+    protected boolean preSubmissionStart() {
+        return ((SimpleConfig) getConfig()).preSubmissionStart();
+    }
+
+    @Override
     public String getProjectName() {
         return MinecraftServer.getBrandName();
     }

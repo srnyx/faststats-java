@@ -6,16 +6,10 @@ import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.auth.ServerAuthManager;
 import com.hypixel.hytale.server.core.universe.Universe;
 import dev.faststats.SimpleMetrics;
-import dev.faststats.config.SimpleConfig;
 
 final class HytaleMetricsImpl extends SimpleMetrics {
     HytaleMetricsImpl(final Factory factory) throws IllegalStateException {
         super(factory);
-    }
-
-    @Override
-    protected boolean preSubmissionStart() {
-        return ((SimpleConfig) context.getConfig()).preSubmissionStart();
     }
 
     @Override

@@ -2,7 +2,6 @@ package dev.faststats.bukkit;
 
 import com.google.gson.JsonObject;
 import dev.faststats.SimpleMetrics;
-import dev.faststats.config.SimpleConfig;
 import dev.faststats.data.Metric;
 import org.bukkit.plugin.Plugin;
 
@@ -52,11 +51,6 @@ final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
         if (settings == null) return false;
 
         return settings.getBoolean("bungeecord") && proxies.getBoolean("bungee-cord.online-mode");
-    }
-
-    @Override
-    protected boolean preSubmissionStart() {
-        return ((SimpleConfig) context.getConfig()).preSubmissionStart();
     }
 
     @Override

@@ -4,7 +4,6 @@ import cn.nukkit.Server;
 import cn.nukkit.plugin.PluginBase;
 import com.google.gson.JsonObject;
 import dev.faststats.SimpleMetrics;
-import dev.faststats.config.SimpleConfig;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -18,11 +17,6 @@ final class NukkitMetricsImpl extends SimpleMetrics {
 
         this.server = plugin.getServer();
         this.plugin = plugin;
-    }
-
-    @Override
-    protected boolean preSubmissionStart() {
-        return ((SimpleConfig) context.getConfig()).preSubmissionStart();
     }
 
     @Override

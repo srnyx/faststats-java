@@ -32,6 +32,11 @@ public final class MockContext extends SimpleContext {
     }
 
     @Override
+    protected boolean preSubmissionStart() {
+        return true;
+    }
+
+    @Override
     public String getProjectName() {
         return "Mock";
     }
