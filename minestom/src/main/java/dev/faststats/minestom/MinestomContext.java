@@ -3,7 +3,6 @@ package dev.faststats.minestom;
 import dev.faststats.ErrorTracker;
 import dev.faststats.ErrorTrackerService;
 import dev.faststats.SimpleContext;
-import dev.faststats.SimpleMetrics;
 import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
 import net.minestom.server.MinecraftServer;
@@ -32,8 +31,7 @@ public final class MinestomContext extends SimpleContext {
     @Override
     public void ready() {
         super.ready();
-        metrics().map(SimpleMetrics.class::cast).ifPresent(SimpleMetrics::startSubmitting);
-        errorTrackerService().map(ErrorTrackerService::globalErrorTracker).ifPresent(errorTracker -> {
+        if (!ready) errorTrackerService().map(ErrorTrackerService::globalErrorTracker).ifPresent(errorTracker -> {
             final var handler = MinecraftServer.getExceptionManager().getExceptionHandler();
             MinecraftServer.getExceptionManager().setExceptionHandler(error -> {
                 handler.handleException(error);

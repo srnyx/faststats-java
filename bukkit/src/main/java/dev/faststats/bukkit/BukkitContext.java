@@ -1,7 +1,6 @@
 package dev.faststats.bukkit;
 
 import dev.faststats.SimpleContext;
-import dev.faststats.SimpleMetrics;
 import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
 import org.bukkit.plugin.Plugin;
@@ -35,12 +34,11 @@ public final class BukkitContext extends SimpleContext {
 
     @Override
     public void ready() {
-        try {
+        super.ready();
+        if (!ready) try {
             Class.forName("com.destroystokyo.paper.event.server.ServerExceptionEvent");
             plugin.getServer().getPluginManager().registerEvents(new PaperEventListener(plugin, this), plugin);
         } catch (final ClassNotFoundException ignored) {
-        } finally {
-            metrics().map(SimpleMetrics.class::cast).ifPresent(SimpleMetrics::startSubmitting);
         }
     }
 

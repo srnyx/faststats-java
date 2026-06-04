@@ -2,6 +2,7 @@ package dev.faststats;
 
 import dev.faststats.internal.Logger;
 import dev.faststats.internal.LoggerFactory;
+import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jspecify.annotations.Nullable;
@@ -17,13 +18,15 @@ import java.util.function.Function;
 public non-sealed abstract class SimpleContext implements FastStatsContext {
     private final Logger logger = LoggerFactory.factory().getLogger(getClass());
 
-    private final Config config;
     private final @Token String token;
+    private final Config config;
     private final SdkInfo sdkInfo;
+
+    protected volatile boolean ready = false;
 
     private @Nullable Metrics metrics;
     private @Nullable FeatureFlagService featureFlagService;
-    private @Nullable ErrorTrackerService errorTrackerService;
+    private @Nullable SimpleErrorTrackerService errorTrackerService;
 
     /**
      * Creates a new context that stores the shared configuration and token for all FastStats services.
@@ -49,8 +52,8 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
 
     @MustBeInvokedByOverriders
     protected final void initializeServices(final Factory<?, ?> factory) throws IllegalStateException {
-        this.metrics = factory.metrics != null ? factory.metrics.apply(metricsFactory()) : null;
-        this.errorTrackerService = factory.errorTracker != null ? new SimpleErrorTrackerService(this, factory.errorTracker) : null;
+        this.metrics = config.submitMetrics() && factory.metrics != null ? factory.metrics.apply(metricsFactory()) : null;
+        this.errorTrackerService = config.errorTracking() && factory.errorTracker != null ? new SimpleErrorTrackerService(this, factory.errorTracker) : null;
         this.featureFlagService = factory.featureFlagService != null ? factory.featureFlagService.apply(new SimpleFeatureFlagService.Factory(this)) : null;
 
         if (metrics == null && errorTrackerService == null && featureFlagService == null)
@@ -130,15 +133,25 @@ public non-sealed abstract class SimpleContext implements FastStatsContext {
 
     @Override
     public void ready() {
+        if (ready) {
+            logger.warn("%s#ready() was called twice; ignoring.", getClass().getSimpleName());
+            return;
+        }
+        this.ready = true;
+        if (errorTrackerService != null) errorTrackerService.startErrorSubmission();
+        if (metrics instanceof final SimpleMetrics simpleMetrics) simpleMetrics.startSubmitting();
     }
 
+    @Async.Schedule
     protected abstract void scheduleAtFixedRate(Runnable task, long initialDelay, long period, TimeUnit unit);
-    
+
     @Override
     public void shutdown() {
-        if (errorTrackerService instanceof final SimpleErrorTrackerService service) service.shutdown();
+        if (!ready) return;
+        if (errorTrackerService != null) errorTrackerService.shutdown();
         if (featureFlagService instanceof final SimpleFeatureFlagService service) service.shutdown();
         if (metrics instanceof final SimpleMetrics simpleMetrics) simpleMetrics.shutdown();
+        ready = false;
     }
 
     @Override

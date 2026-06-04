@@ -29,7 +29,6 @@ final class SimpleErrorTrackerService extends SubmissionService implements Error
         super(context);
         logger.setFilter(level -> context.getConfig().debug()); // fixme: awful practice
         this.globalErrorTracker = ((SimpleErrorTracker) globalErrorTracker);
-        startErrorSubmission();
     }
 
     @Override
@@ -76,8 +75,6 @@ final class SimpleErrorTrackerService extends SubmissionService implements Error
     }
 
     private void submit() {
-        if (!context.getConfig().errorTracking()) return;
-
         final var data = createData();
         if (data == null) return;
 
@@ -117,8 +114,7 @@ final class SimpleErrorTrackerService extends SubmissionService implements Error
         errorTrackers.forEach(SimpleErrorTracker::clear);
     }
 
-    private void startErrorSubmission() {
-        if (!context.getConfig().errorTracking()) return;
+    void startErrorSubmission() {
         final var initialDelay = TimeUnit.SECONDS.toMillis(Long.getLong("faststats.initial-delay", 30));
         final var period = TimeUnit.MINUTES.toMillis(30);
         context.scheduleAtFixedRate(this::submit, initialDelay, period, TimeUnit.MILLISECONDS);

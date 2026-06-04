@@ -5,8 +5,6 @@ import dev.faststats.data.Metric;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Async;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.MustBeInvokedByOverriders;
-import org.jetbrains.annotations.VisibleForTesting;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
@@ -17,8 +15,6 @@ import java.util.concurrent.TimeUnit;
 @ApiStatus.Internal
 public abstract class SimpleMetrics extends SubmissionService implements Metrics {
     private static final String COLLECT_PATH = "/v1/collect";
-
-    private boolean submitting;
 
     private final @Nullable Runnable flush;
     private final Set<Metric<?>> metrics;
@@ -43,36 +39,16 @@ public abstract class SimpleMetrics extends SubmissionService implements Metrics
     }
 
     @Async.Schedule
-    @MustBeInvokedByOverriders
-    public void startSubmitting() {
-        startSubmitting(getInitialDelay(), getPeriod(), TimeUnit.MILLISECONDS);
-    }
-
-    private void startSubmitting(final long initialDelay, final long period, final TimeUnit unit) {
-        if (!context.preSubmissionStart()) return;
-
-        if (!context.getConfig().submitMetrics()) {
-            logger.warn("Metrics disabled, not starting submission");
-            return;
-        }
-
-        if (submitting) {
-            logger.warn("Metrics already submitting, not starting again");
-            return;
-        }
-
-        logger.info("Starting metrics submission");
-        context.scheduleAtFixedRate(
+    void startSubmitting() {
+        if (context.preSubmissionStart()) context.scheduleAtFixedRate(
                 this::submit,
-                initialDelay,
-                period,
-                unit
+                getInitialDelay(),
+                getPeriod(),
+                TimeUnit.MILLISECONDS
         );
-        submitting = true;
     }
 
-    @VisibleForTesting
-    public boolean submit() {
+    private boolean submit() {
         if (submit(url, createData(), "metrics")) {
             if (flush != null) flush.run();
             return true;
@@ -137,13 +113,11 @@ public abstract class SimpleMetrics extends SubmissionService implements Metrics
     protected abstract void appendDefaultData(JsonObject metrics);
 
     protected void shutdown() {
-        if (submitting) try {
+        try {
             logger.info("Shutting down metrics submission");
             submit();
         } catch (final Throwable t) {
             logger.error("Failed to submit metrics on shutdown", t);
-        } finally {
-            submitting = false;
         }
     }
 
