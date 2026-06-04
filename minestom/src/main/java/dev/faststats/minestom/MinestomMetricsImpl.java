@@ -23,6 +23,7 @@ final class MinestomMetricsImpl extends SimpleMetrics implements MinestomMetrics
         metrics.addProperty("online_mode", !(MinecraftServer.process().auth() instanceof Auth.Offline));
         metrics.addProperty("player_count", MinecraftServer.getConnectionManager().getOnlinePlayerCount());
         metrics.addProperty("server_type", "Minestom");
+        metrics.addProperty("platform_version", MinecraftServer.getBrandName() + " " + MinecraftServer.VERSION_NAME);
     }
 
     public static final class Factory extends SimpleMetrics.Factory implements MinestomMetrics.Factory {

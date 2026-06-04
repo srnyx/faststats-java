@@ -12,9 +12,10 @@ import java.util.function.Supplier;
 final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
     private final Plugin plugin;
 
-    private final String pluginVersion;
     private final String minecraftVersion;
+    private final String pluginVersion;
     private final String serverType;
+    private final String serverVersion;
 
     @SuppressWarnings({"deprecation", "Convert2MethodRef"})
     private BukkitMetricsImpl(final Factory factory, final Plugin plugin) throws IllegalStateException {
@@ -28,6 +29,7 @@ final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
         this.minecraftVersion = tryOrEmpty(() -> server.getMinecraftVersion())
                 .or(() -> tryOrEmpty(() -> server.getBukkitVersion().split("-", 2)[0]))
                 .orElseGet(() -> server.getVersion().split("\\(MC: |\\)", 3)[1]);
+        this.serverVersion = server.getVersion();
         this.serverType = server.getName();
     }
 
@@ -64,6 +66,7 @@ final class BukkitMetricsImpl extends SimpleMetrics implements BukkitMetrics {
         metrics.addProperty("player_count", getPlayerCount());
         metrics.addProperty("plugin_version", pluginVersion);
         metrics.addProperty("server_type", serverType);
+        metrics.addProperty("platform_version", serverVersion);
     }
 
     private int getPlayerCount() {

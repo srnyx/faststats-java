@@ -25,9 +25,9 @@ final class BungeeMetricsImpl extends SimpleMetrics {
     @Override
     protected void appendDefaultData(final JsonObject metrics) {
         metrics.addProperty("online_mode", server.getConfig().isOnlineMode());
+        metrics.addProperty("platform_version", server.getVersion());
         metrics.addProperty("player_count", server.getOnlineCount());
         metrics.addProperty("plugin_version", plugin.getDescription().getVersion());
-        metrics.addProperty("proxy_version", server.getVersion());
         metrics.addProperty("server_type", server.getName());
     }
 }

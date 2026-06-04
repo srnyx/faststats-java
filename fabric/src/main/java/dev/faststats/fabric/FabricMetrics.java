@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import dev.faststats.SimpleMetrics;
 import dev.faststats.config.SimpleConfig;
 import net.fabricmc.loader.api.ModContainer;
+import net.minecraft.SharedConstants;
 
 abstract class FabricMetrics extends SimpleMetrics {
     protected final ModContainer mod;
@@ -19,6 +20,7 @@ abstract class FabricMetrics extends SimpleMetrics {
     }
 
     protected void appendFabricData(final JsonObject metrics, final String serverType) {
+        metrics.addProperty("platform_version", SharedConstants.getCurrentVersion().id()); // todo: doublecheck
         metrics.addProperty("plugin_version", mod.getMetadata().getVersion().getFriendlyString());
         metrics.addProperty("server_type", serverType);
     }

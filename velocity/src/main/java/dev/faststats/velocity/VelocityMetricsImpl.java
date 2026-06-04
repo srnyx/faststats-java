@@ -27,9 +27,9 @@ final class VelocityMetricsImpl extends SimpleMetrics {
     protected void appendDefaultData(final JsonObject metrics) {
         final var pluginVersion = plugin.getDescription().getVersion().orElse("unknown");
         metrics.addProperty("online_mode", server.getConfiguration().isOnlineMode());
+        metrics.addProperty("platform_version", server.getVersion().getVersion());
         metrics.addProperty("player_count", server.getPlayerCount());
         metrics.addProperty("plugin_version", pluginVersion);
-        metrics.addProperty("proxy_version", server.getVersion().getVersion());
         metrics.addProperty("server_type", server.getVersion().getName());
     }
 }
