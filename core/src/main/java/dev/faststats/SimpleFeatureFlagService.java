@@ -13,7 +13,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,7 +24,7 @@ final class SimpleFeatureFlagService extends SubmissionService implements Featur
 
     private final URI url = getServerUrl("faststats.flags-server", "https://flags.faststats.dev");
 
-    private final UUID serverId;
+    private final SimpleContext context;
 
     private final Attributes attributes;
     private final Duration ttl;
@@ -40,8 +39,8 @@ final class SimpleFeatureFlagService extends SubmissionService implements Featur
         super(context);
         if (ttl.isNegative()) throw new IllegalArgumentException("TTL cannot be negative");
         this.attributes = attributes;
+        this.context = context;
         this.ttl = ttl;
-        this.serverId = context.getConfig().serverId();
     }
 
     @SuppressWarnings("unchecked")
@@ -58,9 +57,7 @@ final class SimpleFeatureFlagService extends SubmissionService implements Featur
     }
 
     private <T> CompletableFuture<T> sendOptRequest(final SimpleFeatureFlag<T> flag, final String path) {
-        final var requestBody = createRequestBody();
-        requestBody.addProperty("flag", flag.getId());
-
+        final var requestBody = createRequestBody(flag);
         return send(path, requestBody).thenCompose(response -> {
             if (isSuccessful(response)) return fetch(flag);
             logUnsuccessfulResponse(response);
@@ -71,10 +68,7 @@ final class SimpleFeatureFlagService extends SubmissionService implements Featur
     }
 
     private <T> CompletableFuture<T> createFetch(final SimpleFeatureFlag<T> flag) {
-        final var requestBody = createRequestBody();
-        requestBody.addProperty("key", flag.getId());
-        addAttributes(requestBody, flag);
-
+        final var requestBody = createRequestBody(flag);
         final var request = createRequest(CHECK_PATH, requestBody);
         logger.info("Fetching %s: %s", request.uri(), requestBody.toString());
         return HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -82,17 +76,18 @@ final class SimpleFeatureFlagService extends SubmissionService implements Featur
                 .whenComplete((ignored, throwable) -> fetchesInProgress.remove(flag.getId()));
     }
 
-    private JsonObject createRequestBody() {
+    private JsonObject createRequestBody(final SimpleFeatureFlag<?> flag) {
         final var requestBody = new JsonObject();
-        requestBody.addProperty("identifier", serverId.toString());
-        return requestBody;
-    }
-
-    private <T> void addAttributes(final JsonObject requestBody, final SimpleFeatureFlag<T> flag) {
         final var attributes = new JsonObject();
+        
+        requestBody.addProperty("identifier", context.getConfig().serverId().toString());
+        requestBody.addProperty("key", flag.getId());
+        
         this.attributes.forEachPrimitive(attributes::add);
         if (flag.attributes() != null) flag.attributes().forEachPrimitive(attributes::add);
         if (!attributes.isEmpty()) requestBody.add("attributes", attributes);
+        
+        return requestBody;
     }
 
     private CompletableFuture<HttpResponse<String>> send(final String path, final JsonObject requestBody) {
