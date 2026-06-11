@@ -13,5 +13,6 @@ module dev.faststats {
     requires static org.jetbrains.annotations;
     requires static org.jspecify;
 
+    uses dev.faststats.SdkInfo.UserAgentProvider;
     uses dev.faststats.internal.LoggerFactory;
 }

@@ -3,10 +3,16 @@ package dev.faststats;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.ServiceLoader;
 
 final class SimpleSdkInfo implements SdkInfo {
+    private static final UserAgentProvider userAgentProvider = ServiceLoader.load(UserAgentProvider.class)
+            .findFirst()
+            .orElseGet(SimpleSdkInfo.SimpleUserAgentProvider::new);
+
     private final @Nullable String buildId;
     private final String name;
+    private final String userAgent;
     private final String version;
 
     SimpleSdkInfo(final String name, final String version, @Nullable final String buildId) throws IllegalArgumentException {
@@ -15,6 +21,7 @@ final class SimpleSdkInfo implements SdkInfo {
         this.name = name;
         this.version = version;
         this.buildId = buildId;
+        this.userAgent = userAgentProvider.getUserAgent(this);
     }
 
     @Override
@@ -34,6 +41,13 @@ final class SimpleSdkInfo implements SdkInfo {
 
     @Override
     public String getUserAgent() {
-        return "FastStats Metrics " + name + "/" + version;
+        return userAgent;
+    }
+
+    static final class SimpleUserAgentProvider implements UserAgentProvider {
+        @Override
+        public String getUserAgent(final SdkInfo sdkInfo) {
+            return "FastStats Metrics " + sdkInfo.getName() + "/" + sdkInfo.getVersion();
+        }
     }
 }
