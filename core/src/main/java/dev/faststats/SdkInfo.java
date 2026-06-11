@@ -1,5 +1,7 @@
 package dev.faststats;
 
+import org.jetbrains.annotations.Contract;
+
 import java.util.Optional;
 
 /**
@@ -38,6 +40,20 @@ public sealed interface SdkInfo permits SimpleSdkInfo {
 
     /**
      * Get the user agent sent with FastStats HTTP requests.
+     *
+     * @return the HTTP user agent
+     * @since 0.24.0
+     */
+    String getUserAgent();
+
+    /**
+     * Provides the HTTP user agent for the default {@link SdkInfo}
+     * implementation.
+     * <p>
+     * This service-provider hook is intended for SDKs that depend on
+     * FastStats core and need to identify their own distribution in outgoing
+     * requests. Implementations are discovered with {@link java.util.ServiceLoader};
+     * custom SDKs should provide one to override the core default user agent.
      * <p>
      * The user agent should include enough information to identify the client
      * implementation, including the vendor name, SDK name, and SDK version.
@@ -45,8 +61,19 @@ public sealed interface SdkInfo permits SimpleSdkInfo {
      * repository URL, Discord server, or website, so FastStats can reach the
      * implementation owner in case of abuse or operational problems.
      *
-     * @return the HTTP user agent
-     * @since 0.24.0
+     * @since 0.26.0
      */
-    String getUserAgent();
+    interface UserAgentProvider {
+        /**
+         * Get the user agent for the supplied SDK information.
+         * <p>
+         *
+         * @param sdkInfo the SDK information to build the user agent from
+         * @return the HTTP user agent
+         * @implNote Calling {@link SdkInfo#getUserAgent()} on the supplied SDK information has undefined behavior.
+         * @since 0.26.0
+         */
+        @Contract(pure = true)
+        String getUserAgent(SdkInfo sdkInfo);
+    }
 }
