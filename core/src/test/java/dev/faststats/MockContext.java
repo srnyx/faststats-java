@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public final class MockContext extends SimpleContext {
+    private final Factory factory;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(runnable -> {
         final var thread = new Thread(runnable, "faststats-submitter");
         thread.setDaemon(true);
@@ -18,6 +19,7 @@ public final class MockContext extends SimpleContext {
 
     private MockContext(final Factory factory) throws IllegalArgumentException {
         super(factory, factory.config(), "test", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        this.factory = factory;
         initializeServices(factory);
     }
 
@@ -33,7 +35,7 @@ public final class MockContext extends SimpleContext {
 
     @Override
     protected boolean preSubmissionStart() {
-        return true;
+        return !factory.firstRun;
     }
 
     @Override
@@ -90,9 +92,15 @@ public final class MockContext extends SimpleContext {
 
     public static final class Factory extends SimpleContext.Factory<MockContext, Factory> {
         private Config config = new MockConfig(UUID.randomUUID(), true, true, true, true, true);
+        private boolean firstRun = false;
 
         public Factory allFeaturesDisabled() {
             config = new MockConfig(config.serverId(), false, false, false, false, false);
+            return this;
+        }
+
+        public Factory firstRun() {
+            firstRun = true;
             return this;
         }
 
