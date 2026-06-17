@@ -162,7 +162,7 @@ public record SimpleConfig(
     }
 
     @SuppressWarnings("PatternValidation")
-    public boolean preSubmissionStart() {
+    public boolean preSubmissionStart(final String name) {
         if (Boolean.getBoolean("faststats.first-run")) return false;
 
         if (firstRun()) {
@@ -170,7 +170,7 @@ public record SimpleConfig(
             final var split = ONBOARDING_MESSAGE.split("\n");
             for (final var s : split) if (s.length() > separatorLength) separatorLength = s.length();
 
-            final var logger = LoggerFactory.factory().getLogger(getClass());
+            final var logger = LoggerFactory.factory().getLogger(name);
             logger.info("-".repeat(separatorLength));
             for (final var s : split) logger.info(s);
             logger.info("-".repeat(separatorLength));
