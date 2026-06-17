@@ -41,7 +41,7 @@ public final class BungeeContext extends SimpleContext {
 
     @Override
     protected boolean preSubmissionStart() {
-        return ((SimpleConfig) getConfig()).preSubmissionStart();
+        return ((SimpleConfig) getConfig()).preSubmissionStart(getProjectName());
     }
 
     @Override
