@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 final class ErrorHelper {
     public static final int MAX_MESSAGE_LENGTH = 1000;
     public static final int MAX_FRAME_SIZE = 300;
-    public static final int MAX_STACK_SIZE = 15;
+    public static final int MAX_STACK_SIZE = 30;
 
     private static final Set<String> allowedNames = Set.of("minecraft", "server", "root", "ubuntu");
     private static final List<Map.Entry<Pattern, String>> defaultAnonymizationEntries = defaultAnonymizationEntries();
