@@ -12,6 +12,8 @@ val javaVersionsOverride = mapOf(
     ":hytale:example-plugin" to 25,
     ":minestom" to 25,
     ":minestom:example-server" to 25,
+    ":neoforge" to 25,
+    ":neoforge:example-mod" to 25,
     ":velocity" to 21,
     ":velocity:example-plugin" to 21
 )
@@ -25,7 +27,7 @@ subprojects {
 
     val example = project.name.startsWith("example")
     if (example) {
-        if (project.path != ":fabric:example-mod") {
+        if (project.path != ":fabric:example-mod" && project.path != ":neoforge:example-mod") {
             apply { plugin("com.gradleup.shadow") }
         }
     } else {

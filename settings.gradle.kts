@@ -1,5 +1,6 @@
 pluginManagement.repositories {
     maven("https://maven.fabricmc.net/")
+    maven("https://maven.neoforged.net/releases")
     gradlePluginPortal()
 }
 
@@ -21,6 +22,8 @@ include("hytale")
 include("hytale:example-plugin")
 include("minestom")
 include("minestom:example-server")
+include("neoforge")
+include("neoforge:example-mod")
 include("nukkit")
 include("nukkit:example-plugin")
 include("sponge")
