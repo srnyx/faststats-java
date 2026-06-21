@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("com.gradleup.shadow") version "9.4.2" apply false
-    kotlin("jvm") version "2.3.20" apply false
+    kotlin("jvm") version "2.4.0" apply false
 }
 
 val javaVersionsOverride = mapOf(
