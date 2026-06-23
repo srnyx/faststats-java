@@ -1,6 +1,7 @@
 package dev.faststats;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import dev.faststats.internal.Logger;
 
 import java.io.ByteArrayOutputStream;
@@ -63,7 +64,9 @@ abstract class SubmissionService {
             );
 
             if (isSuccessful(response)) {
-                logger.info("%s submitted with status code: %s (%s)",
+                final var warnings = hasWarnings(response.body());
+                final var level = warnings ? Logger.LogLevel.WARN : Logger.LogLevel.INFO;
+                logger.debug(level, "%s submitted with status code: %s (%s)", null,
                         capitalize(submissionName), response.statusCode(), response.body());
                 return true;
             }
@@ -76,6 +79,15 @@ abstract class SubmissionService {
             logger.error("Failed to submit %s", t, submissionName);
         }
         return false;
+    }
+
+    private boolean hasWarnings(final String body) {
+        try {
+            final var json = JsonParser.parseString(body);
+            return json.isJsonObject() && json.getAsJsonObject().has("warnings");
+        } catch (final Throwable ignored) {
+            return false;
+        }
     }
 
     private static String capitalize(final String value) {
