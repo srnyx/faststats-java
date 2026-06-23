@@ -79,7 +79,7 @@ public final class NukkitContext extends SimpleContext {
 
         @Override
         public NukkitContext create() {
-            final var loggerFactory = PlatformLoggerFactory.create((level, t, message) -> {
+            final var loggerFactory = new PlatformLoggerFactory((level, t, message) -> {
                 switch (level) {
                     case INFO -> plugin.getLogger().info(message, t);
                     case ERROR -> plugin.getLogger().error(message, t);

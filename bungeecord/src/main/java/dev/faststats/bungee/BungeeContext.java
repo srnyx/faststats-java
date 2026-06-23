@@ -76,7 +76,7 @@ public final class BungeeContext extends SimpleContext {
 
         @Override
         public BungeeContext create() {
-            final var loggerFactory = PlatformLoggerFactory.create((level, throwable, message) -> {
+            final var loggerFactory = new PlatformLoggerFactory((level, throwable, message) -> {
                 plugin.getLogger().log(level.getLevel(), message, throwable);
             });
             return new BungeeContext(this, loggerFactory, plugin, token);

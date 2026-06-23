@@ -104,7 +104,7 @@ public final class NeoForgeContext extends SimpleContext {
         @Override
         public NeoForgeContext create() {
             final var logger = org.slf4j.LoggerFactory.getLogger(modId);
-            final var loggerFactory = PlatformLoggerFactory.create((level, throwable, message) -> {
+            final var loggerFactory = new PlatformLoggerFactory((level, throwable, message) -> {
                 switch (level) {
                     case INFO -> logger.info(message, throwable);
                     case ERROR -> logger.error(message, throwable);

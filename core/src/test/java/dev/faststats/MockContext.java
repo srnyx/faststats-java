@@ -110,7 +110,7 @@ public final class MockContext extends SimpleContext {
 
         @Override
         public MockContext create() {
-            final var loggerFactory = PlatformLoggerFactory.create((level, throwable, message) -> {
+            final var loggerFactory = new PlatformLoggerFactory((level, throwable, message) -> {
                 final var output = level == Logger.LogLevel.ERROR ? System.err : System.out;
                 output.println("[" + level.name() + "] " + message);
                 if (throwable != null) throwable.printStackTrace(output);

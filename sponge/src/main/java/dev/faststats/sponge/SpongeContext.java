@@ -125,7 +125,7 @@ public final class SpongeContext extends SimpleContext {
         @Override
         public SpongeContext create() {
             if (token == null) throw new IllegalStateException("Token not configured");
-            final var loggerFactory = PlatformLoggerFactory.create((level, throwable, message) -> {
+            final var loggerFactory = new PlatformLoggerFactory((level, throwable, message) -> {
                 switch (level) {
                     case INFO -> {
                         if (throwable == null) plugin.logger().info(message);

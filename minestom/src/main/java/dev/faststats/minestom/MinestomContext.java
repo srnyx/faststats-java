@@ -86,7 +86,7 @@ public final class MinestomContext extends SimpleContext {
         @Override
         public MinestomContext create() {
             final var logger = LoggerFactory.getLogger("FastStats");
-            final var loggerFactory = PlatformLoggerFactory.create((level, throwable, message) -> {
+            final var loggerFactory = new PlatformLoggerFactory((level, throwable, message) -> {
                 switch (level) {
                     case INFO -> {
                         if (throwable == null) logger.info(message);

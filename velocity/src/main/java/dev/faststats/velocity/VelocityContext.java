@@ -137,7 +137,7 @@ public final class VelocityContext extends SimpleContext {
         @Override
         public VelocityContext create() {
             if (token == null) throw new IllegalStateException("Token not configured");
-            final var loggerFactory = PlatformLoggerFactory.create((level, t, message) -> {
+            final var loggerFactory = new PlatformLoggerFactory((level, t, message) -> {
                 switch (level) {
                     case INFO -> logger.info(message, t);
                     case ERROR -> logger.error(message, t);

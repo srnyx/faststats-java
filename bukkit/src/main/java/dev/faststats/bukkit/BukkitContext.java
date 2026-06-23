@@ -101,7 +101,7 @@ public final class BukkitContext extends SimpleContext {
 
         @Override
         public BukkitContext create() {
-            final var loggerFactory = PlatformLoggerFactory.create((level, throwable, message) -> {
+            final var loggerFactory = new PlatformLoggerFactory((level, throwable, message) -> {
                 plugin.getLogger().log(level.getLevel(), message, throwable);
             });
             return new BukkitContext(this, loggerFactory, plugin, token);
