@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import org.jetbrains.annotations.Contract;
-import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -102,7 +101,7 @@ public final class FabricContext extends SimpleContext {
 
         @Override
         public FabricContext create() {
-            final var logger = LoggerFactory.getLogger(modId);
+            final var logger = org.slf4j.LoggerFactory.getLogger(modId);
             final var loggerFactory = new PlatformLoggerFactory((level, throwable, message) -> {
                 switch (level) {
                     case INFO -> {
