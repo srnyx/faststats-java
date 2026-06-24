@@ -82,7 +82,7 @@ public final class HytaleContext extends SimpleContext {
         public HytaleContext create() {
             final var loggerFactory = new PlatformLoggerFactory((level, throwable, message) -> {
                 final var api = switch (level) {
-                    case INFO -> plugin.getLogger().atFine();
+                    case INFO -> plugin.getLogger().atInfo();
                     case ERROR -> plugin.getLogger().atSevere();
                     case WARN -> plugin.getLogger().atWarning();
                 };
