@@ -45,18 +45,14 @@ abstract class SubmissionService {
         return URI.create(defaultUrl);
     }
 
-    // todo: i still don't like the logging :|
     protected boolean submit(
             final URI url,
             final JsonElement data,
             final String submissionName
     ) {
-        logger.info("Uncompressed data: %s", data);
-
         try {
             final var compressed = compress(data.toString());
-            logger.info("Compressed size: %s bytes", compressed.length);
-            logger.info("Sending %s to: %s", submissionName, url);
+            logger.info("Sending %s to: %s (%s bytes)\n%s", submissionName, url, compressed.length, data);
 
             final var response = HTTP_CLIENT.send(
                     createSubmissionRequest(url, compressed),
@@ -66,7 +62,7 @@ abstract class SubmissionService {
             if (isSuccessful(response)) {
                 final var warnings = hasWarnings(response.body());
                 final var level = warnings ? Logger.LogLevel.WARN : Logger.LogLevel.INFO;
-                logger.debug(level, "%s submitted with status code: %s (%s)", null,
+                logger.debug(level, "%s submitted successfully with status code: %s (%s)", null,
                         capitalize(submissionName), response.statusCode(), response.body());
                 return true;
             }
