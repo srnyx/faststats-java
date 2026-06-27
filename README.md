@@ -15,15 +15,23 @@ Use `build` for the reusable FastStats libraries:
 ./gradlew :config:build
 ./gradlew :bukkit:build
 ./gradlew :bungeecord:build
-./gradlew :fabric:build
+./gradlew :fabric:versions:26.1:build
 ./gradlew :hytale:build
 ./gradlew :minestom:build
+./gradlew :neoforge:versions:26.1:build
 ./gradlew :nukkit:build
 ./gradlew :sponge:build
 ./gradlew :velocity:build
 ```
 
-Library jars are written to each module's `build/libs` directory. Fabric also produces a remapped jar through Fabric Loom as part of its build output.
+Library jars are written to each module's `build/libs` directory. Fabric and NeoForge publish compatibility modules, such as `fabric:versions:26.1` and `neoforge:versions:26.1`, under stable Maven artifact IDs with Minecraft range suffixes:
+
+```text
+dev.faststats.metrics:fabric:<sdk-version>+mc26.1-26.2
+dev.faststats.metrics:neoforge:<sdk-version>+mc26.1-26.2
+```
+
+The `fabric` and `neoforge` modules contain shared platform code and are not published directly.
 
 ### Bukkit, BungeeCord, Hytale, Minestom, Nukkit, Sponge, and Velocity examples
 
@@ -60,3 +68,11 @@ To compile and test all modules with the standard lifecycle, run:
 ```
 
 For deployable example artifacts, run the platform-specific commands above after `build` or instead of it.
+
+### Platform compatibility checks
+
+Compile all published platform compatibility modules with:
+
+```sh
+./gradlew checkPlatformCompat
+```

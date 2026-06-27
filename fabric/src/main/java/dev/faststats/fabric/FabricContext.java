@@ -5,6 +5,7 @@ import dev.faststats.SimpleContext;
 import dev.faststats.SimpleMetrics;
 import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
+import dev.faststats.fabric.compat.CompatibilityLayer;
 import dev.faststats.internal.PlatformLoggerFactory;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -13,6 +14,7 @@ import net.fabricmc.loader.api.ModContainer;
 import org.jetbrains.annotations.Contract;
 
 import java.util.Set;
+import java.util.ServiceLoader;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -31,6 +33,7 @@ public final class FabricContext extends SimpleContext {
         return thread;
     });
     private final Set<Future<?>> tasks = new CopyOnWriteArraySet<>();
+    private final CompatibilityLayer compatibilityLayer;
     private final ModContainer mod;
 
     private FabricContext(final Factory factory, final dev.faststats.internal.LoggerFactory loggerFactory, final String modId, @Token final String token) {
@@ -40,6 +43,9 @@ public final class FabricContext extends SimpleContext {
         this.mod = FabricLoader.getInstance().getModContainer(modId).orElseThrow(() -> {
             return new IllegalArgumentException("Mod not found: " + modId);
         });
+        this.compatibilityLayer = ServiceLoader.load(CompatibilityLayer.class)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No Fabric compatibility layer found"));
         initializeServices(factory);
         switch (FabricLoader.getInstance().getEnvironmentType()) {
             case CLIENT -> {
@@ -60,8 +66,8 @@ public final class FabricContext extends SimpleContext {
             @Override
             public Metrics create() throws IllegalStateException {
                 return switch (FabricLoader.getInstance().getEnvironmentType()) {
-                    case CLIENT -> new FabricMetricsClient(this, mod);
-                    case SERVER -> new FabricMetricsServer(this, mod);
+                    case CLIENT -> new FabricMetricsClient(this, mod, compatibilityLayer);
+                    case SERVER -> new FabricMetricsServer(this, mod, compatibilityLayer);
                 };
             }
         };

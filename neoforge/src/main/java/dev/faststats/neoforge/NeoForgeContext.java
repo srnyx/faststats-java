@@ -7,6 +7,7 @@ import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
 import dev.faststats.internal.LoggerFactory;
 import dev.faststats.internal.PlatformLoggerFactory;
+import dev.faststats.neoforge.compat.CompatibilityLayer;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -18,6 +19,7 @@ import net.neoforged.neoforgespi.language.IModInfo;
 import org.jetbrains.annotations.Contract;
 
 import java.util.Set;
+import java.util.ServiceLoader;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -36,6 +38,7 @@ public final class NeoForgeContext extends SimpleContext {
         return thread;
     });
     private final Set<Future<?>> tasks = new CopyOnWriteArraySet<>();
+    private final CompatibilityLayer compatibilityLayer;
     private final IModInfo mod;
 
     private NeoForgeContext(final Factory factory, final LoggerFactory loggerFactory, final String modId, @Token final String token) {
@@ -45,6 +48,9 @@ public final class NeoForgeContext extends SimpleContext {
         this.mod = ModList.get().getModContainerById(modId).map(ModContainer::getModInfo).orElseThrow(() -> {
             return new IllegalArgumentException("Mod not found: " + modId);
         });
+        this.compatibilityLayer = ServiceLoader.load(CompatibilityLayer.class)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No NeoForge compatibility layer found"));
         initializeServices(factory);
         switch (FMLEnvironment.getDist()) {
             case CLIENT -> ready();
@@ -62,8 +68,8 @@ public final class NeoForgeContext extends SimpleContext {
             @Override
             public Metrics create() throws IllegalStateException {
                 return switch (FMLEnvironment.getDist()) {
-                    case CLIENT -> new NeoForgeMetricsClient(this, mod);
-                    case DEDICATED_SERVER -> new NeoForgeMetricsServer(this, mod);
+                    case CLIENT -> new NeoForgeMetricsClient(this, mod, compatibilityLayer);
+                    case DEDICATED_SERVER -> new NeoForgeMetricsServer(this, mod, compatibilityLayer);
                 };
             }
         };

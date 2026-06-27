@@ -4,36 +4,10 @@ plugins {
     kotlin("jvm") version "2.4.20-Beta1" apply false
 }
 
-val javaVersionsOverride = mapOf(
-    ":bukkit" to 21,
-    ":bukkit:example-plugin" to 21,
-    ":fabric" to 25,
-    ":fabric:example-mod" to 25,
-    ":hytale" to 25,
-    ":hytale:example-plugin" to 25,
-    ":minestom" to 25,
-    ":minestom:example-server" to 25,
-    ":neoforge" to 25,
-    ":neoforge:example-mod" to 25,
-    ":velocity" to 21,
-    ":velocity:example-plugin" to 21
-)
-val defaultJavaVersion = 17
-
 subprojects {
     apply {
         plugin("java")
         plugin("java-library")
-    }
-
-    val example = project.name.startsWith("example")
-    if (example) {
-        apply { plugin("org.jetbrains.kotlin.jvm") }
-        if (project.path != ":fabric:example-mod" && project.path != ":neoforge:example-mod") {
-            apply { plugin("com.gradleup.shadow") }
-        }
-    } else {
-        apply { plugin("maven-publish") }
     }
 
     group = "dev.faststats.metrics"
@@ -42,19 +16,13 @@ subprojects {
         mavenCentral()
     }
 
-    val javaVersion = javaVersionsOverride[project.path] ?: defaultJavaVersion
-
     extensions.configure<JavaPluginExtension> {
-        toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
         withSourcesJar()
         withJavadocJar()
     }
 
-    tasks.compileJava {
-        options.release.set(javaVersion)
-    }
-
-    val generateFastStatsProperties by tasks.registering {
+    val generateFastStatsProperties = tasks.register("generateFastStatsProperties") {
+        description = "Generates the META-INF/faststats.properties file"
         val outputDir = layout.buildDirectory.dir("generated/resources/faststats")
         outputs.dir(outputDir)
         doLast {
@@ -76,20 +44,24 @@ subprojects {
         }
     }
 
+    fun ownProperty(name: String): String? {
+        return if (extensions.extraProperties.has(name)) extensions.extraProperties.get(name).toString() else null
+    }
+
     tasks.withType<JavaCompile>().configureEach {
-        project.findProperty("moduleName")?.let { moduleName ->
+        ownProperty("moduleName")?.let { moduleName ->
             options.compilerArgs.addAll(listOf("--add-reads", "$moduleName=ALL-UNNAMED"))
         }
     }
 
     tasks.withType<Test>().configureEach {
-        project.findProperty("moduleName")?.let { moduleName ->
+        ownProperty("moduleName")?.let { moduleName ->
             jvmArgs("--add-reads", "$moduleName=ALL-UNNAMED")
         }
     }
 
     tasks.withType<JavaExec>().configureEach {
-        project.findProperty("moduleName")?.let { moduleName ->
+        ownProperty("moduleName")?.let { moduleName ->
             jvmArgs("--add-reads", "$moduleName=ALL-UNNAMED")
         }
     }
@@ -101,20 +73,33 @@ subprojects {
             "implSpec:a:Implementation Requirements:",
             "implNote:a:Implementation Note:"
         )
-        project.findProperty("moduleName")?.let { moduleName ->
+        ownProperty("moduleName")?.let { moduleName ->
             options.addStringOption("-add-reads", "$moduleName=ALL-UNNAMED")
         }
     }
 
     afterEvaluate {
-        if (example) return@afterEvaluate
+        val publishArtifactId = ownProperty("publishArtifactId")
+        if (!plugins.hasPlugin("maven-publish") && publishArtifactId == null) return@afterEvaluate
+        if (!plugins.hasPlugin("maven-publish") || publishArtifactId == null) throw IllegalStateException(
+            "Invalid publishing setup for project \"${project.path}\", " +
+                    "maven-publish: ${plugins.hasPlugin("maven-publish")}, publishArtifactId: $publishArtifactId"
+        )
+
+        ownProperty("publishVersionSuffix")?.let { suffix ->
+            version = "${rootProject.version}+$suffix"
+        }
+
         extensions.configure<PublishingExtension> {
             publications.create<MavenPublication>("maven") {
-                artifactId = project.name
+                artifactId = publishArtifactId
                 groupId = "dev.faststats.metrics"
 
                 pom {
-                    url.set("https://faststats.dev/docs")
+                    url.set(
+                        ownProperty("publishDocsUrl")
+                            ?: throw IllegalStateException("No docs URL provided by \"${project.path}\"")
+                    )
                     scm {
                         val repository = "faststats-dev/faststats-java"
                         url.set("https://github.com/$repository")
@@ -138,4 +123,17 @@ subprojects {
             }
         }
     }
+}
+
+// todo: automate dependsOn
+tasks.register("checkPlatformCompat") {
+    group = "verification"
+    description = "Compiles all platform compatibility modules."
+    dependsOn(":fabric:versions:26.1:compileJava", ":neoforge:versions:26.1:compileJava")
+}
+
+tasks.register("publishPlatformCompat") {
+    group = "publishing"
+    description = "Publishes all platform compatibility modules."
+    dependsOn(":fabric:versions:26.1:publish", ":neoforge:versions:26.1:publish")
 }

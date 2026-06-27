@@ -1,7 +1,24 @@
-val moduleName by extra("dev.faststats.neoforge")
+extra.set("moduleName", "dev.faststats.neoforge")
 
 plugins {
     id("net.neoforged.moddev") version "2.0.141"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+tasks.compileJava {
+    options.release.set(21)
+}
+
+configurations.compileClasspath {
+    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
+}
+
+allprojects {
+    if (project.name == "example-mod") return@allprojects
+    apply { plugin("maven-publish") }
+    extra.set("publishArtifactId", "neoforge")
+    extra.set("publishDocsUrl", "https://docs.faststats.dev/java/platform/neoforge")
 }
 
 neoForge {

@@ -1,0 +1,10 @@
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
+module dev.faststats.fabric.compat.v26_1 {
+    requires dev.faststats.fabric;
+
+    requires static org.jspecify;
+
+    provides dev.faststats.fabric.compat.CompatibilityLayer with dev.faststats.fabric.compat.v26_1.CompatibilityLayer_v26_1;
+}

@@ -2,6 +2,7 @@ import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 module dev.faststats.neoforge {
+    exports dev.faststats.neoforge.compat;
     exports dev.faststats.neoforge;
 
     requires com.google.gson;
@@ -13,4 +14,6 @@ module dev.faststats.neoforge {
 
     requires static org.jetbrains.annotations;
     requires static org.jspecify;
+
+    uses dev.faststats.neoforge.compat.CompatibilityLayer;
 }

@@ -1,3 +1,16 @@
+extra.set("publishArtifactId", "velocity")
+extra.set("publishDocsUrl", "https://docs.faststats.dev/java/platform/velocity")
+
+plugins {
+    id("maven-publish")
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+tasks.compileJava {
+    options.release.set(21)
+}
+
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
 }

@@ -17,5 +17,7 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
       - name: Build with Gradle
         run: ./gradlew build
+      - name: Check platform compatibility modules
+        run: ./gradlew checkPlatformCompat
       - name: Test with Gradle
         run: ./gradlew test

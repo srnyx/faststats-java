@@ -1,3 +1,14 @@
+plugins {
+    id("com.gradleup.shadow")
+    kotlin("jvm")
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+tasks.compileJava {
+    options.release.set(25)
+}
+
 dependencies {
     implementation("net.minestom:minestom:2026.05.11-1.21.11")
     implementation(project(":minestom"))

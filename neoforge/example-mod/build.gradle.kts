@@ -1,5 +1,6 @@
 plugins {
     id("net.neoforged.moddev") version "2.0.141"
+    kotlin("jvm")
 }
 
 neoForge {
@@ -11,7 +12,7 @@ configurations.configureEach {
 }
 
 dependencies {
-    implementation(project(":neoforge"))
+    implementation(project(":neoforge:versions:26.1"))
 }
 
 tasks.jar {
@@ -19,4 +20,5 @@ tasks.jar {
     from(project(":config").sourceSets["main"].output)
     from(project(":core").sourceSets["main"].output)
     from(project(":neoforge").sourceSets["main"].output)
+    from(project(":neoforge:versions:26.1").sourceSets["main"].output)
 }

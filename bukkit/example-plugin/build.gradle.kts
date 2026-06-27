@@ -1,9 +1,20 @@
+plugins {
+    id("com.gradleup.shadow")
+    kotlin("jvm")
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+tasks.compileJava {
+    options.release.set(25)
+}
+
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
     implementation(project(":bukkit"))
 }
 
