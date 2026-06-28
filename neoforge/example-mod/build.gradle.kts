@@ -12,7 +12,7 @@ configurations.configureEach {
 }
 
 dependencies {
-    implementation(project(":neoforge:versions:26.1"))
+    implementation(project(":neoforge:versions:26.1-26.2"))
 }
 
 tasks.jar {
@@ -20,5 +20,5 @@ tasks.jar {
     from(project(":config").sourceSets["main"].output)
     from(project(":core").sourceSets["main"].output)
     from(project(":neoforge").sourceSets["main"].output)
-    from(project(":neoforge:versions:26.1").sourceSets["main"].output)
+    from(project(":neoforge:versions:26.1-26.2").sourceSets["main"].output)
 }

@@ -15,7 +15,7 @@ Use `build` for the reusable FastStats libraries:
 ./gradlew :config:build
 ./gradlew :bukkit:build
 ./gradlew :bungeecord:build
-./gradlew :fabric:versions:26.1:build
+./gradlew :fabric:versions:26.1-26.3:build
 ./gradlew :hytale:build
 ./gradlew :minestom:build
 ./gradlew :neoforge:versions:26.1:build

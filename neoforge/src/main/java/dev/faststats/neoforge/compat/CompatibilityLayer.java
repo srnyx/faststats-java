@@ -13,4 +13,10 @@ public interface CompatibilityLayer {
     boolean serverOnlineMode();
 
     int serverPlayerCount();
+
+    Environment getEnvironment();
+
+    enum Environment {
+        CLIENT, SERVER
+    }
 }

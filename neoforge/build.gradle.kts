@@ -26,7 +26,7 @@ allprojects {
 }
 
 neoForge {
-    version = "26.1.2.76"
+    version = "21.8.53" // lowest bound, 1.20.6
 }
 
 configurations.configureEach {

@@ -129,11 +129,11 @@ subprojects {
 tasks.register("checkPlatformCompat") {
     group = "verification"
     description = "Compiles all platform compatibility modules."
-    dependsOn(":fabric:versions:26.1:compileJava", ":neoforge:versions:26.1:compileJava")
+    dependsOn(":fabric:versions:26.1-26.3:compileJava", ":neoforge:versions:26.1:compileJava")
 }
 
 tasks.register("publishPlatformCompat") {
     group = "publishing"
     description = "Publishes all platform compatibility modules."
-    dependsOn(":fabric:versions:26.1:publish", ":neoforge:versions:26.1:publish")
+    dependsOn(":fabric:versions:26.1-26.3:publish", ":neoforge:versions:26.1:publish")
 }
