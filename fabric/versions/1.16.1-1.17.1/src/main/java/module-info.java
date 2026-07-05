@@ -1,8 +1,8 @@
-import dev.faststats.fabric.compat.v1_18.CompatibilityLayerImpl;
+import dev.faststats.fabric.compat.v1_16_1.CompatibilityLayerImpl;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-module dev.faststats.fabric.compat.v1_18 {
+module dev.faststats.fabric.compat.v1_16_1 {
     requires dev.faststats.fabric;
 
     requires static org.jspecify;
