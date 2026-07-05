@@ -2,6 +2,7 @@ import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 module dev.faststats.fabric {
+    exports dev.faststats.fabric.compat;
     exports dev.faststats.fabric;
 
     requires com.google.gson;
@@ -13,4 +14,6 @@ module dev.faststats.fabric {
 
     requires static org.jetbrains.annotations;
     requires static org.jspecify;
+
+    uses dev.faststats.fabric.compat.CompatibilityLayer;
 }

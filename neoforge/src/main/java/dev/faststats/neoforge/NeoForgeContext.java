@@ -7,9 +7,9 @@ import dev.faststats.Token;
 import dev.faststats.config.SimpleConfig;
 import dev.faststats.internal.LoggerFactory;
 import dev.faststats.internal.PlatformLoggerFactory;
+import dev.faststats.neoforge.compat.CompatibilityLayer;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -17,6 +17,7 @@ import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforgespi.language.IModInfo;
 import org.jetbrains.annotations.Contract;
 
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
@@ -36,6 +37,7 @@ public final class NeoForgeContext extends SimpleContext {
         return thread;
     });
     private final Set<Future<?>> tasks = new CopyOnWriteArraySet<>();
+    private final CompatibilityLayer compatibilityLayer;
     private final IModInfo mod;
 
     private NeoForgeContext(final Factory factory, final LoggerFactory loggerFactory, final String modId, @Token final String token) {
@@ -45,10 +47,13 @@ public final class NeoForgeContext extends SimpleContext {
         this.mod = ModList.get().getModContainerById(modId).map(ModContainer::getModInfo).orElseThrow(() -> {
             return new IllegalArgumentException("Mod not found: " + modId);
         });
+        this.compatibilityLayer = ServiceLoader.load(CompatibilityLayer.class)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No NeoForge compatibility layer found"));
         initializeServices(factory);
-        switch (FMLEnvironment.getDist()) {
+        switch (compatibilityLayer.getEnvironment()) {
             case CLIENT -> ready();
-            case DEDICATED_SERVER -> {
+            case SERVER -> {
                 NeoForge.EVENT_BUS.addListener((final ServerStartedEvent event) -> ready());
                 NeoForge.EVENT_BUS.addListener((final ServerStoppingEvent event) -> shutdown());
             }
@@ -61,9 +66,9 @@ public final class NeoForgeContext extends SimpleContext {
         return new SimpleMetrics.Factory(this) {
             @Override
             public Metrics create() throws IllegalStateException {
-                return switch (FMLEnvironment.getDist()) {
-                    case CLIENT -> new NeoForgeMetricsClient(this, mod);
-                    case DEDICATED_SERVER -> new NeoForgeMetricsServer(this, mod);
+                return switch (compatibilityLayer.getEnvironment()) {
+                    case CLIENT -> new NeoForgeMetricsClient(this, mod, compatibilityLayer);
+                    case SERVER -> new NeoForgeMetricsServer(this, mod, compatibilityLayer);
                 };
             }
         };

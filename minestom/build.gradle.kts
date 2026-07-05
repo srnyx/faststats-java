@@ -1,3 +1,16 @@
+extra.set("publishArtifactId", "minestom")
+extra.set("publishDocsUrl", "https://docs.faststats.dev/java/platform/minestom")
+
+plugins {
+    id("maven-publish")
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+tasks.compileJava {
+    options.release.set(25)
+}
+
 dependencies {
     api(project(":core"))
     implementation(project(":config"))

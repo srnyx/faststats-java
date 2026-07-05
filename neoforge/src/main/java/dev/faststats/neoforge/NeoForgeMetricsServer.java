@@ -1,25 +1,22 @@
 package dev.faststats.neoforge;
 
 import com.google.gson.JsonObject;
-import net.minecraft.server.MinecraftServer;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import dev.faststats.neoforge.compat.CompatibilityLayer;
 import net.neoforged.neoforgespi.language.IModInfo;
-import org.jspecify.annotations.Nullable;
 
 final class NeoForgeMetricsServer extends NeoForgeMetrics {
-    private @Nullable MinecraftServer server;
+    private final CompatibilityLayer compatibilityLayer;
 
-    NeoForgeMetricsServer(final Factory factory, final IModInfo mod) throws IllegalStateException {
+    NeoForgeMetricsServer(final Factory factory, final IModInfo mod, final CompatibilityLayer compatibilityLayer) throws IllegalStateException {
         super(factory, mod);
-        NeoForge.EVENT_BUS.addListener((final ServerStartedEvent event) -> this.server = event.getServer());
+        this.compatibilityLayer = compatibilityLayer;
+        compatibilityLayer.initServer();
     }
 
     @Override
     protected void appendDefaultData(final JsonObject metrics) {
-        assert server != null : "Server not initialized";
-        metrics.addProperty("online_mode", server.usesAuthentication());
-        metrics.addProperty("player_count", server.getPlayerCount());
+        metrics.addProperty("online_mode", compatibilityLayer.serverOnlineMode());
+        metrics.addProperty("player_count", compatibilityLayer.serverPlayerCount());
         appendNeoForgeData(metrics, "NeoForge");
     }
 }
