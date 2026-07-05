@@ -16,6 +16,7 @@ configurations.compileClasspath {
 
 allprojects {
     if (project.name == "example-mod") return@allprojects
+    if (project.path == ":fabric:versions") return@allprojects
     apply { plugin("maven-publish") }
     extra.set("publishArtifactId", "fabric")
     extra.set("publishDocsUrl", "https://docs.faststats.dev/java/platform/fabric")
